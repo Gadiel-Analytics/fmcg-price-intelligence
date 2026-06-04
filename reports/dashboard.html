@@ -3,227 +3,164 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>FMCG Price Intelligence — Tesco IE · Coca-Cola CSD</title>
+<title>FMCG Price Intelligence — SuperValu IE · Coca-Cola CSD</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
-  :root {
-    --ink: #1a1d29;
-    --paper: #f4f1ea;
-    --card: #fffdf8;
-    --line: #d9d3c4;
-    --accent: #c8102e;      /* Coca-Cola red, used sparingly */
-    --accent2: #1d6f6f;
-    --muted: #6f6a5d;
-    --pos: #c8102e;
-    --neg: #1d6f6f;
+  :root{
+    --ink:#1a1d29;--paper:#f4f1ea;--card:#fffdf8;--line:#d9d3c4;
+    --accent:#c8102e;--accent2:#1d6f6f;--muted:#6f6a5d;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--paper);
-    color: var(--ink);
-    font-family: 'IBM Plex Sans', sans-serif;
-    line-height: 1.5;
-    padding: 48px 24px 80px;
-  }
-  .container { max-width: 1080px; margin: 0 auto; }
-
-  .eyebrow {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
-    color: var(--accent); margin-bottom: 12px;
-  }
-  h1 {
-    font-family: 'Fraunces', serif; font-weight: 600;
-    font-size: clamp(30px, 5vw, 46px); line-height: 1.05; letter-spacing: -0.5px;
-    max-width: 18ch; margin-bottom: 16px;
-  }
-  .standfirst {
-    font-size: 16px; color: var(--muted); max-width: 60ch; margin-bottom: 8px;
-  }
-  .meta {
-    font-family: 'IBM Plex Mono', monospace; font-size: 12px;
-    color: var(--muted); margin-bottom: 40px;
-  }
-
-  .rule { height: 1px; background: var(--line); margin: 40px 0; }
-
-  /* KPI strip */
-  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 16px; margin-bottom: 8px; }
-  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 4px; padding: 20px; }
-  .kpi-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 1.5px;
-               text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
-  .kpi-value { font-family: 'Fraunces', serif; font-size: 34px; font-weight: 600; line-height: 1; }
-  .kpi-sub { font-size: 12px; color: var(--muted); margin-top: 8px; }
-
-  .section-title { font-family: 'Fraunces', serif; font-size: 24px; font-weight: 600; margin-bottom: 6px; }
-  .section-note { font-size: 14px; color: var(--muted); margin-bottom: 24px; max-width: 64ch; }
-
-  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 4px; padding: 28px; }
-
-  /* spread table */
-  table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 1px;
-       text-transform: uppercase; color: var(--muted); text-align: left;
-       padding: 10px 12px; border-bottom: 2px solid var(--ink); }
-  td { padding: 12px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
-  td.num { text-align: right; }
-  .spread-pos { color: var(--accent); font-weight: 600; }
-
-  .chart-axis text { font-family: 'IBM Plex Mono', monospace; font-size: 10px; fill: var(--muted); }
-  .chart-axis line, .chart-axis path { stroke: var(--line); }
-  .legend { display: flex; gap: 20px; flex-wrap: wrap; font-size: 12px; margin-top: 16px; font-family: 'IBM Plex Mono', monospace; }
-  .legend span { display: inline-flex; align-items: center; gap: 6px; }
-  .swatch { width: 14px; height: 3px; display: inline-block; }
-
-  footer { margin-top: 56px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); line-height: 1.8; }
-  footer a { color: var(--accent2); }
-  .empty { padding: 40px; text-align: center; color: var(--muted); font-style: italic; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--paper);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;line-height:1.5;padding:48px 24px 80px}
+  .container{max-width:1080px;margin:0 auto}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+  h1{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(30px,5vw,46px);line-height:1.05;letter-spacing:-.5px;max-width:20ch;margin-bottom:16px}
+  .standfirst{font-size:16px;color:var(--muted);max-width:62ch;margin-bottom:8px}
+  .meta{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);margin-bottom:40px}
+  .rule{height:1px;background:var(--line);margin:40px 0}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:20px}
+  .kpi-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  .kpi-value{font-family:'Fraunces',serif;font-size:34px;font-weight:600;line-height:1}
+  .kpi-sub{font-size:12px;color:var(--muted);margin-top:8px}
+  .section-title{font-family:'Fraunces',serif;font-size:24px;font-weight:600;margin-bottom:6px}
+  .section-note{font-size:14px;color:var(--muted);margin-bottom:24px;max-width:66ch}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:28px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px 12px;border-bottom:2px solid var(--ink)}
+  td{padding:11px 12px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+  td.num{text-align:right}
+  .spread-pos{color:var(--accent);font-weight:600}
+  .spread-zero{color:var(--muted)}
+  .bar-cell{position:relative}
+  .bar{position:absolute;left:12px;top:50%;transform:translateY(-50%);height:8px;background:var(--accent);opacity:.18;border-radius:2px}
+  .chart-axis text{font-family:'IBM Plex Mono',monospace;font-size:10px;fill:var(--muted)}
+  .chart-axis line,.chart-axis path{stroke:var(--line)}
+  .legend{display:flex;gap:20px;flex-wrap:wrap;font-size:12px;margin-top:16px;font-family:'IBM Plex Mono',monospace}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .swatch{width:14px;height:3px;display:inline-block}
+  footer{margin-top:56px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);line-height:1.8}
+  footer a{color:var(--accent2)}
+  .empty{padding:32px;text-align:center;color:var(--muted);font-style:italic}
 </style>
 </head>
 <body>
 <div class="container">
-
   <div class="eyebrow">GadielAnalytics · RGM Price Intelligence</div>
-  <h1>Coca-Cola price-pack architecture at Tesco Ireland</h1>
-  <p class="standfirst">
-    A daily, automated read of carbonated soft-drink shelf prices and promotions —
-    quantifying the Sugar-Sweetened Drinks Tax spread and promotional depth in a market
-    in active price war.
-  </p>
+  <h1>Coca-Cola price-pack architecture at SuperValu Ireland</h1>
+  <p class="standfirst">A daily, automated read of carbonated soft-drink shelf prices — quantifying the Sugar-Sweetened Drinks Tax spread on a like-for-like price-per-litre basis across the Coca-Cola portfolio.</p>
   <p class="meta" id="meta">Loading data…</p>
 
   <div class="kpis" id="kpis"></div>
-
   <div class="rule"></div>
 
   <div class="section-title">Sugar-Tax spread</div>
-  <p class="section-note">
-    Normalised unit price (€/litre) of full-sugar Coca-Cola versus zero/diet equivalents,
-    by pack. A positive spread reflects the pass-through of Ireland's sugar levy onto
-    full-sugar price-packs — a signal RGM teams watch to balance premiumisation and affordability.
-  </p>
+  <p class="section-note">Normalised price per litre of full-sugar Coca-Cola (subject to the levy) versus Zero Sugar (exempt), matched by format and pack count, flavoured variants excluded. A positive spread is the visible pass-through of Ireland's sugar tax onto full-sugar price-packs.</p>
   <div class="panel"><div id="spread"></div></div>
+  <div class="rule"></div>
 
+  <div class="section-title">Price-per-litre by format</div>
+  <p class="section-note">How unit economics change with pack size — the core of price-pack architecture. Larger packs drive down €/litre (the classic volume incentive).</p>
+  <div class="panel"><div id="ppl"></div><div class="legend" id="ppl-legend"></div></div>
   <div class="rule"></div>
 
   <div class="section-title">Base-price trend</div>
-  <p class="section-note">Daily shelf price (€) by SKU. Promotional (Clubcard) prices tracked separately as promo-depth signal.</p>
+  <p class="section-note">Daily shelf price by SKU. Populates as the daily scrape accumulates history.</p>
   <div class="panel"><div id="trend"></div><div class="legend" id="trend-legend"></div></div>
 
   <footer>
-    Source: tesco.ie public product pages · collected daily at human rate · prices & product attributes only (no personal data).<br/>
+    Source: shop.supervalu.ie public search results · collected daily at human rate via Chrome-impersonated client · prices &amp; product attributes only (no personal data).<br/>
     Compliance-by-design — see COMPLIANCE.md · <a href="https://github.com/Gadx1">github.com/Gadx1</a><br/>
     <span id="provenance"></span>
   </footer>
-
 </div>
 
 <script>
-const fmtEUR = d => d == null ? "—" : "€" + Number(d).toFixed(2);
-const palette = ["#c8102e", "#1d6f6f", "#b5830f", "#3a4a8c", "#7a5c3e", "#5a5a5a"];
-
-async function load() {
+const palette=["#c8102e","#1d6f6f","#b5830f","#3a4a8c","#7a5c3e"];
+async function load(){
   let cube;
-  try {
-    const res = await fetch("cube.json");
-    cube = await res.json();
-  } catch (e) {
-    document.getElementById("meta").textContent = "cube.json not found — run `python run.py` to generate it.";
-    return;
-  }
-  renderMeta(cube);
-  renderKPIs(cube);
-  renderSpread(cube.sugar_tax_spread || []);
-  renderTrend(cube.trend || []);
+  try{ cube=await (await fetch("cube.json")).json(); }
+  catch(e){ document.getElementById("meta").textContent="cube.json not found — run `python3 run.py`."; return; }
+  renderMeta(cube); renderKPIs(cube); renderSpread(cube.sugar_tax_spread||[]);
+  renderPPL(cube.latest||[]); renderTrend(cube.trend||[]);
 }
-
-function renderMeta(cube) {
-  const latest = cube.latest || [];
-  const ts = latest.length ? latest[0].scraped_at : null;
-  document.getElementById("meta").textContent =
-    `Tesco Ireland · ${latest.length} SKUs tracked · last updated ${ts ? ts.slice(0,10) : "—"}`;
-  document.getElementById("provenance").textContent =
-    `Last observation: ${ts || "n/a"} (UTC)`;
+function renderMeta(c){
+  const l=c.latest||[]; const ts=l.length?l[0].scraped_at:null;
+  document.getElementById("meta").textContent=`SuperValu Ireland · ${l.length} SKUs tracked · last updated ${ts?ts.slice(0,10):"—"}`;
+  document.getElementById("provenance").textContent=`Last observation: ${ts||"n/a"} (UTC)`;
 }
-
-function renderKPIs(cube) {
-  const latest = cube.latest || [];
-  const spread = cube.sugar_tax_spread || [];
-  const avgSpread = spread.length
-    ? (spread.reduce((s,r)=>s+(r.spread_pct||0),0)/spread.length).toFixed(1) + "%"
-    : "—";
-  const promos = latest.filter(r => r.clubcard_price_text).length;
-  const kpis = [
-    {label:"SKUs tracked", value: latest.length, sub:"Coca-Cola CSD portfolio"},
-    {label:"Avg sugar-tax spread", value: avgSpread, sub:"full-sugar vs zero/diet, €/L"},
-    {label:"SKUs on promotion", value: promos, sub:"Clubcard price active"},
-    {label:"Packs compared", value: spread.length, sub:"like-for-like pairs"},
+function renderKPIs(c){
+  const l=c.latest||[], s=c.sugar_tax_spread||[];
+  const pos=s.filter(r=>r.spread_pct>0);
+  const avg=pos.length?(pos.reduce((a,r)=>a+r.spread_pct,0)/pos.length).toFixed(1)+"%":"—";
+  const mx=s.length?Math.max(...s.map(r=>r.spread_pct)):0;
+  const promos=l.filter(r=>r.clubcard_price_text).length;
+  const k=[
+    {l:"SKUs tracked",v:l.length,s:"Coca-Cola CSD portfolio"},
+    {l:"Avg sugar-tax spread",v:avg,s:"full vs zero, €/litre, where +"},
+    {l:"Max spread",v:mx?("+"+mx.toFixed(1)+"%"):"—",s:"widest format gap"},
+    {l:"Formats compared",v:s.length,s:"like-for-like pairs"},
   ];
-  document.getElementById("kpis").innerHTML = kpis.map(k => `
-    <div class="kpi">
-      <div class="kpi-label">${k.label}</div>
-      <div class="kpi-value">${k.value}</div>
-      <div class="kpi-sub">${k.sub}</div>
-    </div>`).join("");
+  document.getElementById("kpis").innerHTML=k.map(x=>`<div class="kpi"><div class="kpi-label">${x.l}</div><div class="kpi-value">${x.v}</div><div class="kpi-sub">${x.s}</div></div>`).join("");
 }
-
-function renderSpread(rows) {
-  const el = document.getElementById("spread");
-  if (!rows.length) { el.innerHTML = '<div class="empty">No paired full vs zero/diet data yet. Add Zero/Diet SKU IDs to catalog.yaml.</div>'; return; }
-  el.innerHTML = `
-    <table>
-      <thead><tr>
-        <th>Pack</th><th>Full-sugar €/L</th><th>Zero/Diet €/L</th>
-        <th>Spread €/L</th><th>Spread %</th>
-      </tr></thead>
-      <tbody>
-      ${rows.map(r => `
-        <tr>
-          <td>${r.pack}</td>
-          <td class="num">${Number(r.full_unit).toFixed(2)}</td>
-          <td class="num">${Number(r.nosugar_unit).toFixed(2)}</td>
-          <td class="num">+${Number(r.spread_per_unit).toFixed(2)}</td>
-          <td class="num spread-pos">+${Number(r.spread_pct).toFixed(1)}%</td>
-        </tr>`).join("")}
-      </tbody>
-    </table>`;
+function fmtPack(r){ return `${r.pack_count>1?r.pack_count+"× ":""}${r.pack} ${r.container}`; }
+function renderSpread(rows){
+  const el=document.getElementById("spread");
+  if(!rows.length){el.innerHTML='<div class="empty">No paired full vs zero data yet.</div>';return;}
+  rows.sort((a,b)=>b.spread_pct-a.spread_pct);
+  const maxAbs=Math.max(...rows.map(r=>Math.abs(r.spread_pct)),1);
+  el.innerHTML=`<table><thead><tr>
+    <th>Format</th><th class="num">Original €/L</th><th class="num">Zero €/L</th>
+    <th class="num">Spread €/L</th><th class="num">Spread %</th></tr></thead><tbody>
+    ${rows.map(r=>{
+      const cls=r.spread_pct>0.05?"spread-pos":"spread-zero";
+      const w=Math.abs(r.spread_pct)/maxAbs*120;
+      return `<tr><td>${fmtPack(r)}</td>
+        <td class="num">${r.full_per_litre.toFixed(2)}</td>
+        <td class="num">${r.zero_per_litre.toFixed(2)}</td>
+        <td class="num">${r.spread_per_litre>0?"+":""}${r.spread_per_litre.toFixed(2)}</td>
+        <td class="num bar-cell ${cls}"><span class="bar" style="width:${w}px"></span>${r.spread_pct>0?"+":""}${r.spread_pct.toFixed(1)}%</td></tr>`;
+    }).join("")}</tbody></table>`;
 }
-
-function renderTrend(rows) {
-  const el = document.getElementById("trend");
-  if (!rows.length) { el.innerHTML = '<div class="empty">No trend data yet — needs ≥1 daily run.</div>'; return; }
-
-  rows.forEach(r => r._key = `${r.variant} ${r.pack}`);
-  const series = d3.group(rows, d => d._key);
-  const parse = d3.timeParse("%Y-%m-%d");
-  const allDates = [...new Set(rows.map(r => r.date))].map(parse).sort((a,b)=>a-b);
-
-  const W = el.clientWidth || 980, H = 360, M = {t:20,r:20,b:36,l:48};
-  const x = d3.scaleTime().domain(d3.extent(allDates)).range([M.l, W-M.r]);
-  const y = d3.scaleLinear()
-    .domain([d3.min(rows,d=>d.base_price)*0.96, d3.max(rows,d=>d.base_price)*1.04])
-    .range([H-M.b, M.t]);
-
-  const svg = d3.select(el).append("svg").attr("viewBox", `0 0 ${W} ${H}`).attr("width","100%");
-  svg.append("g").attr("class","chart-axis").attr("transform",`translate(0,${H-M.b})`)
-     .call(d3.axisBottom(x).ticks(Math.min(allDates.length,7)).tickFormat(d3.timeFormat("%b %d")));
-  svg.append("g").attr("class","chart-axis").attr("transform",`translate(${M.l},0)`)
-     .call(d3.axisLeft(y).ticks(5).tickFormat(d=>"€"+d.toFixed(2)));
-
-  const line = d3.line().x(d=>x(parse(d.date))).y(d=>y(d.base_price)).curve(d3.curveMonotoneX);
-  let i = 0; const legend = [];
-  for (const [key, vals] of series) {
-    const c = palette[i % palette.length]; i++;
-    const sorted = vals.slice().sort((a,b)=>parse(a.date)-parse(b.date));
-    svg.append("path").datum(sorted).attr("fill","none").attr("stroke",c).attr("stroke-width",2).attr("d",line);
-    svg.selectAll(null).data(sorted).enter().append("circle")
-       .attr("cx",d=>x(parse(d.date))).attr("cy",d=>y(d.base_price)).attr("r",3).attr("fill",c);
-    legend.push(`<span><i class="swatch" style="background:${c}"></i>${key}</span>`);
-  }
-  document.getElementById("trend-legend").innerHTML = legend.join("");
+function renderPPL(rows){
+  const el=document.getElementById("ppl");
+  const data=rows.filter(r=>!r.is_flavoured&&r.unit_price!=null&&(r.sugar_class==="full"||r.sugar_class==="zero"));
+  if(!data.length){el.innerHTML='<div class="empty">No data.</div>';return;}
+  data.sort((a,b)=>b.total_litres-a.total_litres);
+  const W=el.clientWidth||980,bar=26,H=data.length*bar+40,M={t:10,r:60,b:24,l:160};
+  const x=d3.scaleLinear().domain([0,d3.max(data,d=>d.unit_price)*1.1]).range([M.l,W-M.r]);
+  const svg=d3.select(el).append("svg").attr("viewBox",`0 0 ${W} ${H}`).attr("width","100%");
+  svg.append("g").attr("class","chart-axis").attr("transform",`translate(0,${H-M.b})`).call(d3.axisBottom(x).ticks(6).tickFormat(d=>"€"+d.toFixed(2)));
+  data.forEach((d,i)=>{
+    const y=M.t+i*bar;
+    const c=d.sugar_class==="zero"?palette[1]:palette[0];
+    svg.append("rect").attr("x",M.l).attr("y",y).attr("width",x(d.unit_price)-M.l).attr("height",bar-8).attr("fill",c).attr("opacity",.85).attr("rx",2);
+    svg.append("text").attr("x",M.l-8).attr("y",y+(bar-8)/2).attr("dy",".35em").attr("text-anchor","end").style("font-family","'IBM Plex Mono',monospace").style("font-size","10px").style("fill","var(--ink)").text(`${d.variant} ${d.pack_count>1?d.pack_count+"×":""}${d.pack}`);
+    svg.append("text").attr("x",x(d.unit_price)+6).attr("y",y+(bar-8)/2).attr("dy",".35em").style("font-family","'IBM Plex Mono',monospace").style("font-size","10px").style("fill","var(--muted)").text("€"+d.unit_price.toFixed(2));
+  });
+  document.getElementById("ppl-legend").innerHTML=`<span><i class="swatch" style="background:${palette[0]}"></i>Original (full sugar)</span><span><i class="swatch" style="background:${palette[1]}"></i>Zero Sugar</span>`;
 }
-
+function renderTrend(rows){
+  const el=document.getElementById("trend");
+  if(!rows.length){el.innerHTML='<div class="empty">No trend data yet — needs ≥1 daily run.</div>';return;}
+  rows.forEach(r=>{ r._key=`${r.variant} ${r.pack_count>1?r.pack_count+"×":""}${r.pack}`; r._date=new Date(r.date*1000); });
+  const days=[...new Set(rows.map(r=>r.date))];
+  if(days.length<2){el.innerHTML='<div class="empty">Trend appears once ≥2 days of data are collected. Currently 1 day — the daily cron will build history automatically.</div>';return;}
+  const series=d3.group(rows,d=>d._key);
+  const W=el.clientWidth||980,H=360,M={t:20,r:20,b:36,l:48};
+  const x=d3.scaleTime().domain(d3.extent(rows,d=>d._date)).range([M.l,W-M.r]);
+  const y=d3.scaleLinear().domain([d3.min(rows,d=>d.base_price)*.96,d3.max(rows,d=>d.base_price)*1.04]).range([H-M.b,M.t]);
+  const svg=d3.select(el).append("svg").attr("viewBox",`0 0 ${W} ${H}`).attr("width","100%");
+  svg.append("g").attr("class","chart-axis").attr("transform",`translate(0,${H-M.b})`).call(d3.axisBottom(x).ticks(6).tickFormat(d3.timeFormat("%b %d")));
+  svg.append("g").attr("class","chart-axis").attr("transform",`translate(${M.l},0)`).call(d3.axisLeft(y).ticks(5).tickFormat(d=>"€"+d.toFixed(2)));
+  const line=d3.line().x(d=>x(d._date)).y(d=>y(d.base_price)).curve(d3.curveMonotoneX);
+  let i=0;const leg=[];
+  for(const[k,v]of series){const c=palette[i%palette.length];i++;const s=v.slice().sort((a,b)=>a._date-b._date);
+    svg.append("path").datum(s).attr("fill","none").attr("stroke",c).attr("stroke-width",2).attr("d",line);
+    leg.push(`<span><i class="swatch" style="background:${c}"></i>${k}</span>`);}
+  document.getElementById("trend-legend").innerHTML=leg.join("");
+}
 load();
 </script>
 </body>

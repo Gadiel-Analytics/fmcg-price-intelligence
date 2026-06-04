@@ -1,68 +1,33 @@
 # =============================================================================
-# SKU Catalog — Coca-Cola CSD portfolio @ Tesco Ireland
+# Catalog — Coca-Cola CSD portfolio @ SuperValu Ireland
 # =============================================================================
-# Add / remove products here WITHOUT touching scraper code.
-# 'id' is the stable Tesco product ID found in the URL:
-#   https://www.tesco.ie/groceries/en-IE/products/{id}
+# Search-query driven: the scraper runs each query against SuperValu's search,
+# extracts every product card, and keeps those matching brand_filter.
+# Add coverage by adding a search term — no product IDs to maintain.
 #
-# 'sugar_class' lets us compute the Sugar-Tax spread (full-sugar vs zero/diet),
-# which is the signature RGM insight of this project.
+# sugar_class / variant / container are inferred from the product name in code
+# (see classify_* in scraper.py), which powers the Sugar-Tax spread.
 # =============================================================================
 
 retailer:
-  name: "Tesco Ireland"
-  code: "tesco_ie"
-  base_url: "https://www.tesco.ie/groceries/en-IE/products"
+  name: "SuperValu Ireland"
+  code: "supervalu_ie"
+  rsid: "5550"
+  search_url: "https://shop.supervalu.ie/sm/delivery/rsid/{rsid}/results?q={query}"
   currency: "EUR"
   market: "IE"
 
-products:
-  # --- Coca-Cola Original (full sugar — subject to IE sugar tax) ---------------
-  - id: "315469891"
-    brand: "Coca-Cola"
-    variant: "Original"
-    sugar_class: "full"
-    pack: "2L"
-    container: "PET"
+# Search terms to sweep. Each returns many cards; brand_filter trims to Coca-Cola.
+search_queries:
+  - "coca cola"
+  - "coca cola zero"
+  - "diet coke"
 
-  - id: "300116791"
-    brand: "Coca-Cola"
-    variant: "Original"
-    sugar_class: "full"
-    pack: "20x330ml"
-    container: "Can"
+# Keep only these brands (case-insensitive). Empty list = keep everything.
+brand_filter:
+  - "Coca-Cola"
 
-  - id: "315848575"
-    brand: "Coca-Cola"
-    variant: "Original"
-    sugar_class: "full"
-    pack: "18x330ml"
-    container: "Can"
-
-  # --- Placeholders to expand during M1 validation ---------------------------
-  # Fill 'id' from the live product URLs for Zero / Diet to activate the
-  # Sugar-Tax spread comparison. Left here as documented intent.
-  # - id: "TBD"
-  #   brand: "Coca-Cola"
-  #   variant: "Zero Sugar"
-  #   sugar_class: "zero"
-  #   pack: "2L"
-  #   container: "PET"
-  #
-  # - id: "TBD"
-  #   brand: "Coca-Cola"
-  #   variant: "Diet Coke"
-  #   sugar_class: "diet"
-  #   pack: "2L"
-  #   container: "PET"
-
-# Compliance guardrails enforced in code (do not edit casually)
 compliance:
-  request_delay_seconds: [3, 7]   # randomised human-rate delay range
-  max_skus_per_run: 60            # hard cap; refuse to run beyond this
+  request_delay_seconds: [3, 7]
+  max_skus_per_run: 60
   user_agent: "GadielAnalytics-PriceIntel/0.1 (portfolio research; +github.com/Gadx1)"
-  disallowed_path_fragments:      # never request URLs containing these
-    - "offset="
-    - "/promotions/"
-    - "/login"
-    - "/register"
