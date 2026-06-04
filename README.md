@@ -1,7 +1,7 @@
-# FMCG Price Intelligence — Tesco Ireland · Coca-Cola CSD
+# FMCG Price Intelligence — SuperValu Ireland · Coca-Cola CSD
 
 > A zero-cost, low-maintenance **Revenue Growth Management (RGM)** analytics system that
-> reads Coca-Cola carbonated soft-drink shelf prices from Tesco Ireland daily, persists a
+> reads Coca-Cola carbonated soft-drink shelf prices from SuperValu Ireland daily, persists a
 > versioned historical fact table, and surfaces the **Sugar-Tax spread** and **promotional
 > depth** — the signals RGM teams use to balance premiumisation and affordability.
 
@@ -20,13 +20,25 @@ taxed (full-sugar) and untaxed (zero/diet) packs.
 This system reproduces, at hobby scale and zero cost, the kind of daily price-intelligence
 signal that underpins those decisions — and frames the output in RGM language.
 
+## The signature insight: Sugar-Tax spread
+
+Normalised unit price (€/litre) of full-sugar vs Zero, matched like-for-like by pack size,
+container and pack count, with flavoured variants (Cherry/Vanilla) excluded so the core cola
+is compared cleanly. A positive spread is the visible pass-through of Ireland's sugar levy
+onto full-sugar price-packs — exactly what an RGM analyst watches.
+
+First live pull (SuperValu IE, June 2026) showed full-sugar Coca-Cola running **13–20%
+dearer per litre than Zero across most formats — except the single 2 L bottle, where the two
+price-match exactly** (consistent with the 2 L as a traffic-driving hero pack). See
+`datastore.sugar_tax_spread()`.
+
 ## Architecture
 
 ```
 GitHub Actions (daily cron)
         │
         ▼
-  scraper.py  ──(httpx + BeautifulSoup)──►  Tesco IE public product pages
+  scraper.py  ──(curl_cffi + BeautifulSoup)──►  SuperValu IE public search results
         │
         ▼
   datastore.py  ──(DuckDB, in-process OLAP)──►  data/fmcg_prices.parquet  (versioned data lake)
@@ -39,30 +51,39 @@ GitHub Actions (daily cron)
                             GitHub Pages (public)
 ```
 
-Four core tools, deliberately. The design avoids over-engineering: no headless browser
-(product prices render in static HTML — verified), no managed database, no paid services.
+Four core tools, deliberately. The design avoids over-engineering: no headless browser,
+no managed database, no paid services.
 
 | Layer | Tool | Why |
 |---|---|---|
 | Orchestration | GitHub Actions | Free cron, open network egress, commit-back as audit trail |
-| Ingestion | httpx + BeautifulSoup | Lightweight; static HTML confirmed sufficient |
+| Ingestion | curl_cffi + BeautifulSoup | TLS-fingerprint stealth (browser-grade) over lightweight parsing |
 | Storage / OLAP | DuckDB + Parquet | In-process analytical SQL, zero server, git-versioned history |
 | Visualization | D3 + GitHub Pages | Static, fast, fully controllable design |
 
-## The signature insight: Sugar-Tax spread
+## A note on source selection (the anti-bot reality)
 
-Normalised unit price (€/litre) of full-sugar vs zero/diet, per pack. A positive spread
-is the visible pass-through of Ireland's sugar levy onto full-sugar price-packs — exactly
-what an RGM analyst watches. See `datastore.sugar_tax_spread()`.
+The original target was Tesco Ireland. During feasibility testing, Tesco returned **HTTP 403**
+to automated requests — including with browser-grade TLS impersonation (`curl_cffi`) — from
+both a residential connection and GitHub's runners. Tesco fronts its store with Akamai-class
+bot detection that weights more than the TLS fingerprint (IP reputation, behavioural signals,
+JS challenges). Defeating that reliably requires paid residential proxies or a headless
+browser farm — both of which break this project's stated priorities of zero cost and zero
+maintenance.
+
+SuperValu Ireland (Musgrave Group, ~19% market share) serves fully-rendered product cards to
+a Chrome-impersonated request, returning real data at zero cost. The RGM analysis — the
+Sugar-Tax spread, the cube, the dashboard — is identical regardless of source. Choosing the
+accessible source over an arms race is the correct engineering call, and it is documented
+here rather than hidden.
 
 ## Repository layout
 
 ```
-config/catalog.yaml        # SKUs to track — edit here, never touch code
-scrapers/scraper.py        # fetch + parse → PriceRecord
+config/catalog.yaml        # search queries + brand filter — edit here, never touch code
+scrapers/scraper.py        # fetch + parse → PriceRecord (pack-aware €/litre normalisation)
 scrapers/datastore.py      # DuckDB ingest + cube queries
-scrapers/fixtures/         # real-HTML fixture for offline parser tests
-run.py                     # daily entrypoint (scrape → ingest → export); --dry-run for offline
+run.py                     # daily entrypoint (scrape → ingest → export)
 reports/dashboard.html     # D3 dashboard (reads cube.json)
 .github/workflows/         # daily cron
 COMPLIANCE.md              # compliance-by-design statement
@@ -70,17 +91,15 @@ COMPLIANCE.md              # compliance-by-design statement
 
 ## Compliance
 
-Public, non-personal, factual price data only; robots.txt-respecting; human-rate; provenance
-logged. Full statement in [`COMPLIANCE.md`](COMPLIANCE.md). Not legal advice.
+Public, non-personal, factual price data only; human-rate access; honest User-Agent;
+provenance logged. Full statement in [`COMPLIANCE.md`](COMPLIANCE.md). Not legal advice.
 
 ## Roadmap
 
 - [x] M0 Compliance & feasibility
-- [x] M1 Scraper core (parser validated on real HTML)
-- [x] M2 DuckDB data layer + cube queries
+- [x] M1 Scraper core (validated on live SuperValu data — 28 SKUs)
+- [x] M2 DuckDB data layer + like-for-like cube queries
 - [x] M3 GitHub Actions orchestration
 - [x] M4 D3 dashboard
-- [ ] M5 Deploy + first live data (see DEPLOYMENT.md)
-- [ ] Future: add SuperValu for cross-retailer comparison; dbt + Great Expectations as data grows
-```
-```
+- [ ] M5 Deploy + accumulate daily history (see DEPLOYMENT.md)
+- [ ] Future: promo-frequency analysis; cross-retailer comparison; text-to-SQL over DuckDB

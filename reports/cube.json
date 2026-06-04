@@ -12,7 +12,7 @@
       "total_litres": 4.0,
       "is_flavoured": false,
       "clubcard_price_text": null,
-      "scraped_at": "2026-06-04T21:31:28+00:00"
+      "scraped_at": "2026-06-04T22:30:43+00:00"
     },
     {
       "brand": "Coca-Cola",
@@ -26,7 +26,7 @@
       "total_litres": 2.0,
       "is_flavoured": false,
       "clubcard_price_text": "Great Value",
-      "scraped_at": "2026-06-04T21:31:28+00:00"
+      "scraped_at": "2026-06-04T22:30:43+00:00"
     },
     {
       "brand": "Coca-Cola",
@@ -40,7 +40,7 @@
       "total_litres": 1.0,
       "is_flavoured": false,
       "clubcard_price_text": null,
-      "scraped_at": "2026-06-04T21:31:28+00:00"
+      "scraped_at": "2026-06-04T22:30:43+00:00"
     },
     {
       "brand": "Coca-Cola",
@@ -54,7 +54,7 @@
       "total_litres": 5.94,
       "is_flavoured": false,
       "clubcard_price_text": "Only €17",
-      "scraped_at": "2026-06-04T21:31:28+00:00"
+      "scraped_at": "2026-06-04T22:30:43+00:00"
     },
     {
       "brand": "Coca-Cola",
@@ -68,7 +68,7 @@
       "total_litres": 3.96,
       "is_flavoured": false,
       "clubcard_price_text": null,
-      "scraped_at": "2026-06-04T21:31:28+00:00"
+      "scraped_at": "2026-06-04T22:30:43+00:00"
     },
     {
       "brand": "Coca-Cola",
@@ -82,7 +82,7 @@
       "total_litres": 2.64,
       "is_flavoured": false,
       "clubcard_price_text": null,
-      "scraped_at": "2026-06-04T21:31:28+00:00"
+      "scraped_at": "2026-06-04T22:30:43+00:00"
     },
     {
       "brand": "Coca-Cola",
@@ -96,7 +96,7 @@
       "total_litres": 1.32,
       "is_flavoured": false,
       "clubcard_price_text": null,
-      "scraped_at": "2026-06-04T21:31:28+00:00"
+      "scraped_at": "2026-06-04T22:30:43+00:00"
     },
     {
       "brand": "Coca-Cola",
@@ -110,7 +110,7 @@
       "total_litres": 0.5,
       "is_flavoured": false,
       "clubcard_price_text": null,
-      "scraped_at": "2026-06-04T21:31:28+00:00"
+      "scraped_at": "2026-06-04T22:30:43+00:00"
     },
     {
       "brand": "Coca-Cola",
@@ -124,7 +124,7 @@
       "total_litres": 0.5,
       "is_flavoured": false,
       "clubcard_price_text": null,
-      "scraped_at": "2026-06-04T21:31:28+00:00"
+      "scraped_at": "2026-06-04T22:30:43+00:00"
     },
     {
       "brand": "Coca-Cola",
@@ -138,7 +138,7 @@
       "total_litres": 0.33,
       "is_flavoured": false,
       "clubcard_price_text": null,
-      "scraped_at": "2026-06-04T21:31:28+00:00"
+      "scraped_at": "2026-06-04T22:30:43+00:00"
     },
     {
       "brand": "Coca-Cola",
@@ -152,7 +152,7 @@
       "total_litres": 4.0,
       "is_flavoured": false,
       "clubcard_price_text": null,
-      "scraped_at": "2026-06-04T21:31:28+00:00"
+      "scraped_at": "2026-06-04T22:30:43+00:00"
     },
     {
       "brand": "Coca-Cola",
@@ -166,7 +166,7 @@
       "total_litres": 4.0,
       "is_flavoured": false,
       "clubcard_price_text": null,
-      "scraped_at": "2026-06-04T21:31:28+00:00"
+      "scraped_at": "2026-06-04T22:30:43+00:00"
     },
     {
       "brand": "Coca-Cola",
@@ -180,21 +180,7 @@
       "total_litres": 2.0,
       "is_flavoured": false,
       "clubcard_price_text": "3 for €6.75",
-      "scraped_at": "2026-06-04T21:31:28+00:00"
-    },
-    {
-      "brand": "Coca-Cola",
-      "variant": "Cherry",
-      "pack": "2 L",
-      "pack_count": 1,
-      "container": "PET",
-      "sugar_class": "zero",
-      "base_price": 3.4,
-      "unit_price": 1.7,
-      "total_litres": 2.0,
-      "is_flavoured": true,
-      "clubcard_price_text": "3 for €6.75",
-      "scraped_at": "2026-06-04T21:31:28+00:00"
+      "scraped_at": "2026-06-04T22:30:43+00:00"
     },
     {
       "brand": "Coca-Cola",
@@ -208,7 +194,21 @@
       "total_litres": 2.0,
       "is_flavoured": true,
       "clubcard_price_text": null,
-      "scraped_at": "2026-06-04T21:31:28+00:00"
+      "scraped_at": "2026-06-04T22:30:43+00:00"
+    },
+    {
+      "brand": "Coca-Cola",
+      "variant": "Cherry",
+      "pack": "2 L",
+      "pack_count": 1,
+      "container": "PET",
+      "sugar_class": "zero",
+      "base_price": 3.4,
+      "unit_price": 1.7,
+      "total_litres": 2.0,
+      "is_flavoured": true,
+      "clubcard_price_text": "3 for €6.75",
+      "scraped_at": "2026-06-04T22:30:43+00:00"
     },
     {
       "brand": "Coca-Cola",
@@ -222,7 +222,7 @@
       "total_litres": 2.0,
       "is_flavoured": false,
       "clubcard_price_text": "3 for €6.75",
-      "scraped_at": "2026-06-04T21:31:28+00:00"
+      "scraped_at": "2026-06-04T22:30:43+00:00"
     },
     {
       "brand": "Coca-Cola",
@@ -236,7 +236,7 @@
       "total_litres": 1.0,
       "is_flavoured": false,
       "clubcard_price_text": null,
-      "scraped_at": "2026-06-04T21:31:28+00:00"
+      "scraped_at": "2026-06-04T22:30:43+00:00"
     },
     {
       "brand": "Coca-Cola",
@@ -250,7 +250,7 @@
       "total_litres": 3.96,
       "is_flavoured": false,
       "clubcard_price_text": null,
-      "scraped_at": "2026-06-04T21:31:28+00:00"
+      "scraped_at": "2026-06-04T22:30:43+00:00"
     },
     {
       "brand": "Coca-Cola",
@@ -264,7 +264,7 @@
       "total_litres": 5.94,
       "is_flavoured": false,
       "clubcard_price_text": "Only €15",
-      "scraped_at": "2026-06-04T21:31:28+00:00"
+      "scraped_at": "2026-06-04T22:30:43+00:00"
     },
     {
       "brand": "Coca-Cola",
@@ -278,7 +278,7 @@
       "total_litres": 2.64,
       "is_flavoured": false,
       "clubcard_price_text": null,
-      "scraped_at": "2026-06-04T21:31:28+00:00"
+      "scraped_at": "2026-06-04T22:30:43+00:00"
     },
     {
       "brand": "Coca-Cola",
@@ -292,7 +292,7 @@
       "total_litres": 1.32,
       "is_flavoured": false,
       "clubcard_price_text": null,
-      "scraped_at": "2026-06-04T21:31:28+00:00"
+      "scraped_at": "2026-06-04T22:30:43+00:00"
     },
     {
       "brand": "Coca-Cola",
@@ -306,7 +306,7 @@
       "total_litres": 1.32,
       "is_flavoured": false,
       "clubcard_price_text": null,
-      "scraped_at": "2026-06-04T21:31:28+00:00"
+      "scraped_at": "2026-06-04T22:30:43+00:00"
     },
     {
       "brand": "Coca-Cola",
@@ -320,11 +320,11 @@
       "total_litres": 0.33,
       "is_flavoured": false,
       "clubcard_price_text": null,
-      "scraped_at": "2026-06-04T21:31:28+00:00"
+      "scraped_at": "2026-06-04T22:30:43+00:00"
     },
     {
       "brand": "Coca-Cola",
-      "variant": "Cherry",
+      "variant": "Zero Sugar",
       "pack": "500 ml",
       "pack_count": 1,
       "container": "PET",
@@ -332,9 +332,23 @@
       "base_price": 2.45,
       "unit_price": 4.9,
       "total_litres": 0.5,
-      "is_flavoured": true,
+      "is_flavoured": false,
       "clubcard_price_text": null,
-      "scraped_at": "2026-06-04T21:31:28+00:00"
+      "scraped_at": "2026-06-04T22:30:43+00:00"
+    },
+    {
+      "brand": "Coca-Cola",
+      "variant": "Zero Sugar",
+      "pack": "500 ml",
+      "pack_count": 1,
+      "container": "PET",
+      "sugar_class": "zero",
+      "base_price": 2.45,
+      "unit_price": 4.9,
+      "total_litres": 0.5,
+      "is_flavoured": false,
+      "clubcard_price_text": null,
+      "scraped_at": "2026-06-04T22:30:43+00:00"
     },
     {
       "brand": "Coca-Cola",
@@ -348,11 +362,11 @@
       "total_litres": 0.5,
       "is_flavoured": true,
       "clubcard_price_text": null,
-      "scraped_at": "2026-06-04T21:31:28+00:00"
+      "scraped_at": "2026-06-04T22:30:43+00:00"
     },
     {
       "brand": "Coca-Cola",
-      "variant": "Zero Sugar",
+      "variant": "Cherry",
       "pack": "500 ml",
       "pack_count": 1,
       "container": "PET",
@@ -360,23 +374,9 @@
       "base_price": 2.45,
       "unit_price": 4.9,
       "total_litres": 0.5,
-      "is_flavoured": false,
+      "is_flavoured": true,
       "clubcard_price_text": null,
-      "scraped_at": "2026-06-04T21:31:28+00:00"
-    },
-    {
-      "brand": "Coca-Cola",
-      "variant": "Zero Sugar",
-      "pack": "500 ml",
-      "pack_count": 1,
-      "container": "PET",
-      "sugar_class": "zero",
-      "base_price": 2.45,
-      "unit_price": 4.9,
-      "total_litres": 0.5,
-      "is_flavoured": false,
-      "clubcard_price_text": null,
-      "scraped_at": "2026-06-04T21:31:28+00:00"
+      "scraped_at": "2026-06-04T22:30:43+00:00"
     },
     {
       "brand": "Coca-Cola",
@@ -390,7 +390,7 @@
       "total_litres": 0.5,
       "is_flavoured": false,
       "clubcard_price_text": null,
-      "scraped_at": "2026-06-04T21:31:28+00:00"
+      "scraped_at": "2026-06-04T22:30:43+00:00"
     }
   ],
   "sugar_tax_spread": [
@@ -423,21 +423,21 @@
     },
     {
       "pack": "500 ml",
-      "container": "Can",
-      "pack_count": 1,
-      "full_per_litre": 5.4,
-      "zero_per_litre": 5.1,
-      "spread_per_litre": 0.3,
-      "spread_pct": 5.9
-    },
-    {
-      "pack": "500 ml",
       "container": "PET",
       "pack_count": 1,
       "full_per_litre": 5.1,
       "zero_per_litre": 4.9,
       "spread_per_litre": 0.2,
       "spread_pct": 4.1
+    },
+    {
+      "pack": "500 ml",
+      "container": "Can",
+      "pack_count": 1,
+      "full_per_litre": 5.4,
+      "zero_per_litre": 5.1,
+      "spread_per_litre": 0.3,
+      "spread_pct": 5.9
     },
     {
       "pack": "2 L",
@@ -514,14 +514,6 @@
       "date": 1780531200,
       "variant": "Original",
       "pack": "330 ml",
-      "pack_count": 18,
-      "base_price": 17.0,
-      "price_per_litre": 2.86
-    },
-    {
-      "date": 1780531200,
-      "variant": "Original",
-      "pack": "330 ml",
       "pack_count": 1,
       "base_price": 1.85,
       "price_per_litre": 5.61
@@ -541,6 +533,14 @@
       "pack_count": 4,
       "base_price": 5.5,
       "price_per_litre": 4.17
+    },
+    {
+      "date": 1780531200,
+      "variant": "Original",
+      "pack": "330 ml",
+      "pack_count": 18,
+      "base_price": 17.0,
+      "price_per_litre": 2.86
     },
     {
       "date": 1780531200,
@@ -570,14 +570,6 @@
       "date": 1780531200,
       "variant": "Zero Sugar",
       "pack": "2 L",
-      "pack_count": 2,
-      "base_price": 5.7,
-      "price_per_litre": 1.43
-    },
-    {
-      "date": 1780531200,
-      "variant": "Zero Sugar",
-      "pack": "2 L",
       "pack_count": 1,
       "base_price": 3.4,
       "price_per_litre": 1.7
@@ -585,10 +577,10 @@
     {
       "date": 1780531200,
       "variant": "Zero Sugar",
-      "pack": "330 ml",
-      "pack_count": 4,
-      "base_price": 5.0,
-      "price_per_litre": 3.79
+      "pack": "2 L",
+      "pack_count": 2,
+      "base_price": 5.7,
+      "price_per_litre": 1.43
     },
     {
       "date": 1780531200,
@@ -597,6 +589,22 @@
       "pack_count": 18,
       "base_price": 15.0,
       "price_per_litre": 2.53
+    },
+    {
+      "date": 1780531200,
+      "variant": "Zero Sugar",
+      "pack": "330 ml",
+      "pack_count": 8,
+      "base_price": 7.5,
+      "price_per_litre": 2.84
+    },
+    {
+      "date": 1780531200,
+      "variant": "Zero Sugar",
+      "pack": "330 ml",
+      "pack_count": 4,
+      "base_price": 5.0,
+      "price_per_litre": 3.79
     },
     {
       "date": 1780531200,
@@ -613,14 +621,6 @@
       "pack_count": 12,
       "base_price": 10.0,
       "price_per_litre": 2.53
-    },
-    {
-      "date": 1780531200,
-      "variant": "Zero Sugar",
-      "pack": "330 ml",
-      "pack_count": 8,
-      "base_price": 7.5,
-      "price_per_litre": 2.84
     },
     {
       "date": 1780531200,
