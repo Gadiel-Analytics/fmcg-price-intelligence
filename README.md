@@ -5,8 +5,8 @@
 > versioned historical fact table, and surfaces the **Sugar-Tax spread** and **promotional
 > depth** — the signals RGM teams use to balance premiumisation and affordability.
 
-**Live dashboard:** https://gadx1.github.io/fmcg-price-intelligence/reports/dashboard.html 
-· **Author:** [@GadielAnalytics](https://github.com/Gadx1)
+**Live dashboard:** https://gadiel-analytics.github.io/fmcg-price-intelligence/reports/dashboard.html 
+· **Author:** [@GadielAnalytics](https://github.com/Gadiel-Analytics)
 · **Website:** https://gadielanalytics.com/
 · **Contact:** hello@gadielanalytics.com
 
