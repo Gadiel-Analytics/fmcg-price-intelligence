@@ -7,7 +7,7 @@ Everything here is done by **you** (the repo owner); the code is already generat
 
 ## Prerequisites
 
-- A GitHub account (you have `Gadx1`).
+- A GitHub account (you have `Gadiel-Analytics`).
 - Git installed locally, OR willingness to use the GitHub web UI for uploads.
 - Python 3.12 locally (optional but recommended, to test before pushing).
 
@@ -33,7 +33,7 @@ git init
 git add .
 git commit -m "Initial commit: FMCG Price Intelligence PoC (M0–M4)"
 git branch -M main
-git remote add origin https://github.com/Gadx1/fmcg-price-intel.git
+git remote add origin https://github.com/gadiel-analytics/fmcg-price-intel.git
 git push -u origin main
 ```
 
@@ -107,7 +107,7 @@ you need Zero and Diet IDs.
 2. Source: **Deploy from a branch**.
 3. Branch: `main`, folder: `/ (root)`. Save.
 4. Wait ~1 min. Your dashboard will be at:
-   `https://gadx1.github.io/fmcg-price-intel/reports/dashboard.html`
+   `https://gadiel-analytics.github.io/fmcg-price-intel/reports/dashboard.html`
 
 The dashboard reads `reports/cube.json`, which the daily workflow refreshes. So once
 Pages is on and the cron runs, the public dashboard updates itself with zero effort.
