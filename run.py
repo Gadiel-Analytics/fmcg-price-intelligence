@@ -31,7 +31,7 @@ import datastore as ds  # noqa: E402
 REPORTS_DIR = ROOT / "reports"
 FIXTURES_DIR = ROOT / "scrapers" / "fixtures"
 DRY_RUN_FIXTURE = FIXTURES_DIR / "supervalu_search_synthetic.html"
-CUBE_SCHEMA_VERSION = 2
+CUBE_SCHEMA_VERSION = 3
 
 
 def _records(df) -> list[dict]:
@@ -47,14 +47,17 @@ def export_cube_json(config: dict, parquet_path: Path = ds.FACT_PARQUET,
                      out_path: Path = REPORTS_DIR / "cube.json") -> dict:
     analysis = config.get("analysis", {})
     levy = float(analysis.get("levy_per_litre_incl_vat", 0.30))
-    con = ds.connect(parquet_path, int(analysis.get("active_window_days", 2)))
+    con = ds.connect(parquet_path, int(analysis.get("active_window_days", 2)), config)
 
     latest = ds.latest_prices(con)
     spread = ds.sugar_tax_spread(con, levy)
     trend = ds.price_trend(con)
     promos = ds.promo_summary(con)
     counts = ds.daily_counts(con)
-    promo_share = con.execute("SELECT AVG((mechanic <> 'none')::INT) FROM obs").fetchone()[0]
+    competition = ds.competition_index(con)
+    brands = ds.brand_summary(con)
+    promo_share = con.execute(
+        "SELECT AVG((mechanic <> 'none')::INT) FROM obs WHERE brand_family = 'Coca-Cola'").fetchone()[0]
     con.close()
 
     ratios = [r for r in spread["levy_ratio"].tolist() if r == r]
@@ -68,6 +71,7 @@ def export_cube_json(config: dict, parquet_path: Path = ds.FACT_PARQUET,
         "levy": {"per_litre_incl_vat": levy, "source": analysis.get("levy_source")},
         "kpis": {
             "active_skus": int(len(latest)),
+            "brands_tracked": int(len(brands)),
             "promo_share_sku_days": round(float(promo_share or 0), 3),
             "levy_ratio_min": min(ratios) if ratios else None,
             "levy_ratio_max": max(ratios) if ratios else None,
@@ -78,6 +82,8 @@ def export_cube_json(config: dict, parquet_path: Path = ds.FACT_PARQUET,
         "trend": _records(trend),
         "promo_summary": _records(promos),
         "daily_counts": _records(counts),
+        "competition_index": _records(competition),
+        "brand_summary": _records(brands),
     }
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")

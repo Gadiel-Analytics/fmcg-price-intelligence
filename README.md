@@ -1,9 +1,15 @@
-# FMCG Price Intelligence — SuperValu Ireland · Coca-Cola CSD
+# FMCG Price Intelligence — SuperValu Ireland · Coca-Cola and competitors
+
+**A [Gadiel Analytics](https://gadielanalytics.com/) product** — designed, built and maintained by
+**Gadiel Guadarrama, M.Sc.**, Decision-System Architect and author of
+[*The Analytics System*](https://theanalyticssystem.com/). Part of the
+[Gadiel Analytics portfolio](https://gadielanalytics.com/work/) (Commercial Analytics & RGM).
 
 > A zero-cost, low-maintenance **Revenue Growth Management (RGM)** analytics system that
-> reads Coca-Cola carbonated soft-drink shelf prices from SuperValu Ireland daily, persists a
-> versioned historical fact table, separates regular prices from promotions, and benchmarks the
-> full-sugar premium against Ireland's **Sugar-Sweetened Drinks Tax**.
+> reads soft-drink and energy-drink shelf prices from SuperValu Ireland daily, persists a
+> versioned historical fact table, separates regular prices from promotions, benchmarks the
+> full-sugar Coca-Cola premium against Ireland's **Sugar-Sweetened Drinks Tax**, and compares
+> Coca-Cola with its competitors like-for-like per litre.
 
 **Live dashboard:** https://gadiel-analytics.github.io/fmcg-price-intelligence/reports/dashboard.html
 · **Author:** [@GadielAnalytics](https://github.com/Gadiel-Analytics)
@@ -37,6 +43,9 @@ flavoured and caffeine-free variants excluded:
   levy; the 500 ml bottle and the 2 × 2 L multipack carry less than the levy.
 - **The 2 L Zero Sugar bottle was on promotion on every one of 115 days** (multibuys, price cuts,
   value badges). Its regular price is a reference point shoppers rarely pay.
+- **Diet Coke is priced identically to Zero Sugar in all eight matched formats** (collected from
+  27 Sep 2026): the untaxed range is priced as one, so the full-sugar premium is the only sugar-based
+  price step in the portfolio.
 - **18 of 24 listed SKUs held a single price for the whole period**; price movement happens
   through promotions (19% of SKU-days), not list-price changes.
 
@@ -44,6 +53,24 @@ flavoured and caffeine-free variants excluded:
 shoppers, and one below 1× does not show absorption: the premium also reflects pricing choices per
 pack. The ratio is a benchmark, not a measured pass-through. The project states the strength of
 its claims explicitly rather than implying causality the data cannot support.
+
+## Coverage
+
+| Segment | Brands (reference brand first) |
+|---|---|
+| Cola | Coca-Cola (incl. Zero Sugar and Diet Coke), Pepsi (incl. Pepsi Max), SuperValu own-label cola |
+| Lemon-lime | Sprite, 7UP |
+| Orange & fruit | Fanta, Club |
+| Energy | Red Bull, Monster |
+
+Coca-Cola history runs from 4 Jun 2026; competitor collection started with the F2 release
+(27 Sep 2026). Brands, owners, segments and per-brand sugar terms live in `config/catalog.yaml`.
+
+## Dashboard
+
+Seven tabs, each addressable by link (e.g. `dashboard.html#competition`):
+**Overview** (KPIs and findings recomputed daily) · **Sugar tax** · **Price architecture** ·
+**Promotions** · **Trends** · **Competition** · **Methodology**. Printing the page prints every tab.
 
 ## Architecture
 
@@ -99,13 +126,14 @@ documented here rather than hidden.
 ```
 config/catalog.yaml        # queries, brands, analysis and quality settings — edit here, not in code
 scrapers/scraper.py        # fetch + parse → PriceRecord (pack-aware €/litre normalisation)
-scrapers/datastore.py      # idempotent ingest + named cube queries
+scrapers/datastore.py      # idempotent ingest, brand map, named cube queries (incl. competition)
 sql/01_observations.sql    # obs → priced → active views (promo parsing, regular-price inference)
 run.py                     # entrypoint: live | --dry-run | --export-only | --capture-fixture
 tests/                     # offline tests (parser, brand filter, ingest, pricing model)
 reports/dashboard.html     # D3 dashboard (reads cube.json)
 .github/workflows/         # daily cron, gated by tests
 COMPLIANCE.md              # compliance-by-design statement
+COPYRIGHT.md               # all rights reserved; source available for viewing and evaluation
 DEPLOYMENT.md              # operator runbook
 CHANGELOG.md               # changes, including data and methodology corrections
 docs/PROJECT_CONTROL.md    # scope, decisions, roadmap and gates
@@ -119,6 +147,19 @@ python -m pytest -q          # offline tests
 python run.py --dry-run      # parse the bundled fixture; no network, no writes
 python run.py --export-only  # rebuild reports/cube.json from the committed history
 ```
+
+## Author and ownership
+
+© 2026 Gadiel Guadarrama · Gadiel Analytics. Designed, built and maintained by Gadiel Guadarrama.
+For pricing, RGM and decision-system advisory: hello@gadielanalytics.com ·
+[LinkedIn](https://www.linkedin.com/company/gadielanalytics) · [X @gadielAnalytics](https://x.com/gadielanalytics).
+
+This repository is public so the work can be read and evaluated, not so it can be reused. No
+license is granted to copy, modify, distribute or sell the source code or substantial portions of
+it without prior written permission. See [COPYRIGHT.md](COPYRIGHT.md).
+
+Not affiliated with SuperValu, Musgrave Group or any brand owner shown. Brand and retailer names are
+used descriptively to identify the products and prices observed.
 
 ## Compliance
 
@@ -134,7 +175,7 @@ provenance logged. Full statement in [`COMPLIANCE.md`](COMPLIANCE.md). Not legal
 - [x] M4 D3 dashboard
 - [x] M5 Deploy + accumulate daily history (continuous since 4 Jun 2026)
 - [x] F0 Hardening: correct current prices, promotion model, levy benchmark, tests, quality gate
-- [ ] F2 Competitive scope: Pepsi, 7UP, Club, Fanta, Sprite, own-label, energy
+- [x] F2 Competitive scope: Pepsi, own-label cola, Sprite, 7UP, Fanta, Club, Red Bull, Monster
 - [ ] F3 Second retailer
 - [ ] F4 Advanced sections: assortment tracker, pack-change detection, deposit-inclusive prices
 - [ ] F5 In-browser SQL over the Parquet history; weekly brief with claim-strength guardrails

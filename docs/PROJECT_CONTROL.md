@@ -5,10 +5,10 @@
 
 | Field | Value |
 |---|---|
-| Document version | `v1.0.0` |
+| Document version | `v1.2.0` |
 | Owner | Gadiel Guadarrama |
-| Last updated | 2026-09-26 |
-| Current phase | F0 complete → F1 promotion depth review, F2 competitive scope |
+| Last updated | 2026-09-27 |
+| Current phase | F2 shipped (pending first live run) → F1 review and F4 in parallel |
 | Next external date | Irish Budget 2027, 6 Oct 2026 (possible SSDT change → event study) |
 
 Update protocol: amend the relevant register, bump the version (patch = status/typo, minor = new
@@ -42,14 +42,18 @@ Revenue Growth Management terms, with the strength of every claim stated explici
 | D-006 | Beverages only until F4 | €/litre normalisation, levy and deposit logic are category-specific; depth over breadth |
 | D-007 | Reference-price (30-day) analysis, if built, is presented as context, never as non-compliance findings about a named retailer | A promotion badge is not necessarily a price-reduction announcement; legal exposure |
 | D-008 | No dbt, managed database or orchestration framework | ~10 views; SQL files + pytest cover the need |
+| D-009 | Master-brand chrome, product-specific surface: every Gadiel Analytics product shares the brand bar, monogram, byline and share card; each keeps its own content palette | Consistent ownership signal without re-skinning each product |
+| D-010 | Licence: all rights reserved, source available for viewing and evaluation (`COPYRIGHT.md`) | Flagship commercial IP; consistent with Matchday Intelligence |
+| D-011 | Tabbed information architecture with deep links; one topic per tab | Scales with F2–F4 without an ever-longer page; shareable links to specific evidence |
 
 ## 3. Roadmap and gates
 
 | Phase | Scope | Gate (evidence required) | Status |
 |---|---|---|---|
-| F0 Hardening | Delisted-SKU exclusion, promotion model, regular-price inference, levy benchmark, Diet Coke collection, idempotent ingest, quality gate, tests, docs | Spread reproducible from committed history; tests green in CI | **Done** (pending first CI run) |
+| F0 Hardening | Delisted-SKU exclusion, promotion model, regular-price inference, levy benchmark, Diet Coke collection, idempotent ingest, quality gate, tests, docs | Spread reproducible from committed history; tests green in CI | **Done** — first CI run 2026-09-27: gate passed, 34 SKUs, 11 Diet Coke |
+| F0.1 Brand | Brand bar, byline, share card, favicon, ownership, tabs, licence | Links render a branded preview on LinkedIn and X | **Done** |
 | F1 Price truth review | Validate regular-price inference against 2–4 weeks of new data; decide handling of perma-promoted SKUs | Inference disagreements < 5% of promo SKU-days on manual check | Next |
-| F2 Competitive scope | Pepsi / Pepsi Max, 7UP, Club, Fanta, Sprite, SuperValu own-label cola, Monster, Red Bull, Lucozade; brand → manufacturer map; sugar band per product | ≥ 80 active SKUs; full/zero pairs for ≥ 3 brands | Planned |
+| F2 Competitive scope | Pepsi / Pepsi Max, 7UP, Club, Fanta, Sprite, SuperValu own-label cola, Monster, Red Bull; brand → manufacturer map; sugar band per product | ≥ 80 active SKUs; full/zero pairs for ≥ 3 brands | **Shipped** — gate checked on first live run |
 | F3 Second retailer | Retailer adapter interface; 1-hour feasibility spike per candidate before committing | Two retailers with matched SKUs on ≥ 10 formats | Planned |
 | F4 Advanced sections | Assortment tracker (listings/delistings), pack-change detection, deposit-inclusive €/L (DRS €0.15/€0.25), 30-day reference-price context, reformulated brands as a quasi-control for the levy spread | Three quantified insights suitable for a case study | Planned |
 | F5 AI layer | In-browser SQL (DuckDB-WASM) over the Parquet; weekly brief generated in CI and checked by a deterministic claim-strength guardrail | Brief contains no causal claim unsupported by the evidence rules | Planned |
@@ -60,15 +64,19 @@ Revenue Growth Management terms, with the strength of every claim stated explici
 | ID | Date | Decision | Status |
 |---|---|---|---|
 | D-001 – D-008 | 2026-09-26 | Baseline adopted (see §2) | Active |
+| D-009 | 2026-09-27 | Branding model (see §2) | Active |
+| D-010, D-011 | 2026-09-27 | Licence; tabbed IA (see §2) | Active |
 
 ## 5. Open questions
 
 | ID | Question | Resolves in |
 |---|---|---|
 | Q-001 | Does the SuperValu card price include the DRS deposit, or is it shown separately? | Next real fixture capture |
-| Q-002 | What brand label do Diet Coke cards carry? (filter now matches brand or title) | First run after F0 |
+| Q-002 | ~~What brand label do Diet Coke cards carry?~~ **Resolved 2026-09-27: "Diet Coke".** | — |
 | Q-003 | Does Budget 2027 change SSDT rates or thresholds? | 6 Oct 2026 |
 | Q-004 | Which second retailer is reachable at human rate without anti-bot escalation? | F3 spike |
+| Q-005 | ~~Repository licence?~~ **Resolved 2026-09-27: all rights reserved, source-available (D-010).** | — |
+| Q-006 | Do the competitor brand labels and sugar terms hold on live cards? Check the run log's dropped-labels line | First run after F2 |
 
 ## 6. Risks
 
@@ -89,3 +97,5 @@ Revenue Growth Management terms, with the strength of every claim stated explici
 | Version | Date | Change |
 |---|---|---|
 | v1.0.0 | 2026-09-26 | Baseline: product definition, D-001–D-008, roadmap F0–F6 |
+| v1.1.0 | 2026-09-27 | F0 gate passed; F0.1 branding; D-009; Q-002 resolved; Q-005 opened |
+| v1.2.0 | 2026-09-27 | F2 shipped; D-010 licence; D-011 tabs; Q-005 resolved; Q-006 opened |

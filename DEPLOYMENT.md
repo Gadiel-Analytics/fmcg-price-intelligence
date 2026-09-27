@@ -54,7 +54,12 @@ relies on, but it is synthetic. To replace it with a real page:
 Edit `config/catalog.yaml` only:
 
 - **New search term:** add to `search_queries`.
-- **New brand:** add an entry under `brands` with its `match` terms and `manufacturer`.
+- **New brand:** add an entry under `brands` with `family`, `owner`, `segment` and `match` terms.
+  Optional: `zero_terms` (title words meaning no sugar for that brand, e.g. `max` for Pepsi),
+  `title_must_contain` (guard for broad labels such as own-label), `private_label: true`.
+  The first brand listed in a segment is that segment's reference (index 100).
+- **Tuning:** each run logs `Brand labels dropped by the brand filter: …`. A soft drink appearing
+  there is a missing `match` term; add it and re-run.
 - **Exclusions:** add title terms to `exclude_title_terms`.
 
 Keep `compliance.max_skus_per_run` above the expected SKU count, or later queries are skipped.

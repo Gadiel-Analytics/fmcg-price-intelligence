@@ -3,7 +3,26 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>FMCG Price Intelligence — SuperValu IE · Coca-Cola CSD</title>
+<title>FMCG Price Intelligence — Gadiel Analytics</title>
+<meta name="description" content="Daily Coca-Cola shelf-price intelligence at SuperValu Ireland: regular versus promotional prices, price-pack architecture, and the full-sugar premium benchmarked against Ireland's sugar levy. Built by Gadiel Analytics."/>
+<meta name="author" content="Gadiel Guadarrama"/>
+<meta name="theme-color" content="#0D1C2E"/>
+<link rel="canonical" href="https://gadiel-analytics.github.io/fmcg-price-intelligence/reports/dashboard.html"/>
+<link rel="icon" type="image/svg+xml" href="favicon.svg"/>
+<meta property="og:type" content="website"/>
+<meta property="og:site_name" content="Gadiel Analytics"/>
+<meta property="og:title" content="FMCG Price Intelligence — Coca-Cola price-pack architecture at SuperValu Ireland"/>
+<meta property="og:description" content="Daily Coca-Cola shelf-price intelligence at SuperValu Ireland: regular versus promotional prices, price-pack architecture, and the full-sugar premium benchmarked against Ireland's sugar levy. Built by Gadiel Analytics."/>
+<meta property="og:url" content="https://gadiel-analytics.github.io/fmcg-price-intelligence/reports/dashboard.html"/>
+<meta property="og:image" content="https://gadiel-analytics.github.io/fmcg-price-intelligence/reports/og-image.png"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:site" content="@gadielAnalytics"/>
+<meta name="twitter:creator" content="@gadielAnalytics"/>
+<meta name="twitter:title" content="FMCG Price Intelligence — Gadiel Analytics"/>
+<meta name="twitter:description" content="Daily Coca-Cola shelf-price intelligence at SuperValu Ireland: regular versus promotional prices, price-pack architecture, and the full-sugar premium benchmarked against Ireland's sugar levy. Built by Gadiel Analytics."/>
+<meta name="twitter:image" content="https://gadiel-analytics.github.io/fmcg-price-intelligence/reports/og-image.png"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
@@ -12,7 +31,8 @@
     --accent:#c8102e;--accent2:#1d6f6f;--muted:#6f6a5d;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--paper);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;line-height:1.5;padding:48px 24px 80px}
+  body{background:var(--paper);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;line-height:1.5;padding:0 0 80px}
+  .container{padding:48px 24px 0}
   .container{max-width:1080px;margin:0 auto}
   .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
   h1{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(30px,5vw,46px);line-height:1.05;letter-spacing:-.5px;max-width:20ch;margin-bottom:16px}
@@ -22,7 +42,7 @@
   .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px}
   .kpi{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:20px}
   .kpi-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
-  .kpi-value{font-family:'Fraunces',serif;font-size:34px;font-weight:600;line-height:1}
+  .kpi-value{font-family:'Fraunces',serif;font-size:clamp(26px,3vw,34px);font-weight:600;line-height:1.05;white-space:nowrap}
   .kpi-sub{font-size:12px;color:var(--muted);margin-top:8px}
   .section-title{font-family:'Fraunces',serif;font-size:24px;font-weight:600;margin-bottom:6px}
   .section-note{font-size:14px;color:var(--muted);margin-bottom:24px;max-width:66ch}
@@ -54,168 +74,384 @@
   td.muted{color:var(--muted)}
   .levy-hi{color:var(--accent);font-weight:600}
   .levy-lo{color:var(--accent2);font-weight:600}
+  .brandbar{background:#0D1C2E;color:#f4f7fc;border-bottom:1px solid #223252}
+  .brandbar-inner{max-width:1080px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:12px;color:inherit;text-decoration:none;margin-right:auto}
+  .brand svg{width:38px;height:38px;flex:none;display:block}
+  .brand-name{font-weight:600;font-size:15px;line-height:1.2}
+  .brand-by{font-size:12px;color:#aab6cc}
+  .brand-nav{display:flex;gap:18px;flex-wrap:wrap;font-size:13px}
+  .brand-nav a{color:#aab6cc;text-decoration:none}
+  .brand-nav a:hover,.brand-nav a:focus-visible{color:#f4f7fc}
+  .brand-nav a:focus-visible,.brand:focus-visible{outline:2px solid #78b9ff;outline-offset:3px;border-radius:2px}
+  .brand-nav .source{border:1px solid #33496f;border-radius:6px;padding:3px 10px;color:#f4f7fc}
+  .byline{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:14px;color:var(--ink);max-width:72ch}
+  .byline a{color:var(--accent2)}
+  .byline .muted{color:var(--muted)}
+
+  td.fmt{white-space:nowrap}
+  .tabs{position:sticky;top:0;z-index:5;background:var(--paper);border-bottom:1px solid var(--line);margin:32px 0 36px;padding:0;display:flex;gap:26px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{appearance:none;background:none;border:0;border-bottom:2px solid transparent;padding:14px 0 12px;font:500 14px 'IBM Plex Sans',sans-serif;color:var(--muted);cursor:pointer;white-space:nowrap}
+  .tab:hover{color:var(--ink)}
+  .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+  .tab:focus-visible{outline:2px solid var(--accent2);outline-offset:-2px;border-radius:3px}
+  [role="tabpanel"]:focus{outline:none}
+  .findings{display:grid;gap:14px;margin-top:8px}
+  .finding{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:4px;padding:16px 20px}
+  .finding p{font-size:15px;max-width:76ch}
+  .finding a{display:inline-block;margin-top:6px;font-size:13px;color:var(--accent2);text-decoration:none;border-bottom:1px solid currentColor}
+  .finding.comp{border-left-color:var(--accent2)}
+  .filter{display:flex;gap:10px;align-items:center;margin-bottom:16px;font-size:13px;color:var(--muted)}
+  .filter select{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:4px;padding:5px 8px}
+  .seg-title{font-family:'Fraunces',serif;font-size:19px;font-weight:600;margin:28px 0 10px}
+  .idx{font-size:12px;color:var(--muted)}
+  .method h3{font-family:'Fraunces',serif;font-size:19px;font-weight:600;margin:26px 0 8px}
+  .method p,.method li{font-size:15px;max-width:72ch;margin-bottom:10px}
+  .method ul{padding-left:20px}
+  .method a{color:var(--accent2)}
+  .method code{font-family:'IBM Plex Mono',monospace;font-size:13px;background:var(--card);border:1px solid var(--line);padding:1px 5px;border-radius:3px}
+  @media print{
+    .brandbar nav,.tabs,.filter{display:none}
+    [role="tabpanel"][hidden]{display:block!important}
+    [role="tabpanel"]{break-before:page}
+    #tab-overview{break-before:auto}
+    .panel,.finding,table{break-inside:avoid}
+    body{padding-bottom:0}
+  }
+  @media (max-width:720px){.tabs{-webkit-mask-image:linear-gradient(to right,#000 82%,transparent);mask-image:linear-gradient(to right,#000 82%,transparent)}}
+  @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
-<div class="container">
-<div class="eyebrow">Gadiel Analytics · RGM Price Intelligence</div>
+<header class="brandbar">
+<div class="brandbar-inner">
+<a class="brand" href="https://gadielanalytics.com/" aria-label="Gadiel Analytics home">
+<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false"><defs><linearGradient id="ga-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#16a3ff"/><stop offset="52%" stop-color="#4658ff"/><stop offset="100%" stop-color="#9b3dff"/></linearGradient></defs><rect x="1.5" y="1.5" width="61" height="61" rx="13" fill="none" stroke="#33496f" stroke-width="2"/><text x="32" y="41" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="26" font-weight="700" letter-spacing="-1" fill="url(#ga-g)">GA</text><rect x="18" y="46" width="28" height="3" rx="1.5" fill="#33496f"/></svg>
+<span><span class="brand-name">FMCG Price Intelligence</span><br/><span class="brand-by">by Gadiel Analytics</span></span>
+</a>
+<nav class="brand-nav" aria-label="Gadiel Analytics">
+<a href="https://gadielanalytics.com/work/">Work</a>
+<a href="https://gadielanalytics.com/consulting/">Consulting</a>
+<a href="https://gadielanalytics.com/about/">About</a>
+<a class="source" href="https://github.com/Gadiel-Analytics/fmcg-price-intelligence">Source</a>
+</nav>
+</div>
+</header>
+<main class="container">
+<div class="eyebrow">Commercial Analytics &amp; RGM · Live system</div>
 <h1>Coca-Cola price-pack architecture at SuperValu Ireland</h1>
-<p class="standfirst">A daily, automated read of Coca-Cola shelf prices, separating regular prices from promotions and benchmarking the full-sugar premium against Ireland's Sugar-Sweetened Drinks Tax on a like-for-like price-per-litre basis.</p>
+<p class="standfirst">A daily, automated read of soft-drink shelf prices that separates regular prices from promotions, benchmarks the full-sugar Coca-Cola premium against Ireland's Sugar-Sweetened Drinks Tax, and compares Coca-Cola with its competitors like-for-like per litre.</p>
 <p class="meta" id="meta">Loading data…</p>
 
+<div class="tabs" role="tablist" aria-label="Dashboard sections">
+<button class="tab" role="tab" id="t-overview" aria-controls="tab-overview" data-tab="overview">Overview</button>
+<button class="tab" role="tab" id="t-sugar-tax" aria-controls="tab-sugar-tax" data-tab="sugar-tax">Sugar tax</button>
+<button class="tab" role="tab" id="t-price-architecture" aria-controls="tab-price-architecture" data-tab="price-architecture">Price architecture</button>
+<button class="tab" role="tab" id="t-promotions" aria-controls="tab-promotions" data-tab="promotions">Promotions</button>
+<button class="tab" role="tab" id="t-trends" aria-controls="tab-trends" data-tab="trends">Trends</button>
+<button class="tab" role="tab" id="t-competition" aria-controls="tab-competition" data-tab="competition">Competition</button>
+<button class="tab" role="tab" id="t-methodology" aria-controls="tab-methodology" data-tab="methodology">Methodology</button>
+</div>
+
+<section role="tabpanel" id="tab-overview" aria-labelledby="t-overview" tabindex="0" hidden>
 <div class="kpis" id="kpis"></div>
 <div class="rule"></div>
+<div class="section-title">What the data shows</div>
+<p class="section-note">Findings recomputed on every daily run from the current data. Each links to the evidence behind it.</p>
+<div class="findings" id="findings"></div>
+</section>
 
+<section role="tabpanel" id="tab-sugar-tax" aria-labelledby="t-sugar-tax" tabindex="0" hidden>
 <div class="section-title">Sugar-tax spread</div>
-<p class="section-note">Regular price per litre of full-sugar Coca-Cola versus Zero Sugar, matched by pack size, pack count and container, for SKUs listed today. Flavoured and caffeine-free variants are excluded. The levy column compares the premium with the tax on full-sugar drinks (<span id="levy-note">€0.30</span> per litre including VAT).</p>
+<p class="section-note">Regular price per litre of full-sugar Coca-Cola versus Zero Sugar and Diet Coke, matched by pack size, pack count and container, for SKUs listed today. Flavoured and caffeine-free variants are excluded. The levy column compares the premium with the tax on full-sugar drinks (<span id="levy-note">€0.30</span> per litre including VAT).</p>
 <div class="panel"><div class="table-wrap" id="spread"></div>
 <p class="note">A premium above the levy does not show that the tax is over-passed to shoppers, and one below it does not show absorption: the gap also reflects pricing choices for each pack. Read the ratio as a benchmark, not a measured pass-through.</p></div>
-<div class="rule"></div>
+</section>
 
-<div class="section-title">Price per litre by format</div>
-<p class="section-note">Regular shelf price per litre for every SKU listed today. Larger packs lower the cost per litre — the core of price-pack architecture.</p>
+<section role="tabpanel" id="tab-price-architecture" aria-labelledby="t-price-architecture" tabindex="0" hidden>
+<div class="section-title">Coca-Cola price per litre by format</div>
+<p class="section-note">Regular shelf price per litre for every Coca-Cola SKU listed today. Larger packs lower the cost per litre — the core of price-pack architecture.</p>
 <div class="panel"><div id="ppl"></div><div class="legend" id="ppl-legend"></div></div>
-<div class="rule"></div>
+</section>
 
+<section role="tabpanel" id="tab-promotions" aria-labelledby="t-promotions" tabindex="0" hidden>
 <div class="section-title">Promotions</div>
-<p class="section-note">How often each SKU carried a promotion over the full history, which mechanics were used, and how deep the cut was against the regular price. Multibuy cuts are measured on the per-unit price when the offer is taken.</p>
-<div class="panel"><div class="table-wrap" id="promos"></div></div>
-<div class="rule"></div>
+<p class="section-note">How often each SKU carried a promotion over its history, which mechanics were used, and how deep the cut was against the regular price. Multibuy cuts are measured on the per-unit price when the offer is taken.</p>
+<div class="panel"><div class="filter"><label for="promo-brand">Brand</label><select id="promo-brand"></select></div><div class="table-wrap" id="promos"></div></div>
+</section>
 
-<div class="section-title">Price per litre over time</div>
+<section role="tabpanel" id="tab-trends" aria-labelledby="t-trends" tabindex="0" hidden>
+<div class="section-title">Coca-Cola price per litre over time</div>
 <p class="section-note">Daily price per litre after promotions, one panel per matched format. Dashed lines show the regular price; where the solid line dips below it, a promotion was running.</p>
 <div class="panel"><div class="grid" id="trend"></div><div class="legend" id="trend-legend"></div></div>
+</section>
 
+<section role="tabpanel" id="tab-competition" aria-labelledby="t-competition" tabindex="0" hidden>
+<div class="section-title">Competition</div>
+<p class="section-note">Coca-Cola alongside Pepsi, SuperValu's own-label cola, lemon-lime, orange and energy brands. Prices are regular shelf prices per litre for SKUs listed today.</p>
+<div id="comp-body"></div>
+</section>
+
+<section role="tabpanel" id="tab-methodology" aria-labelledby="t-methodology" tabindex="0" hidden>
+<div class="method">
+<div class="section-title">Methodology</div>
+<h3>How the data is collected</h3>
+<p>Once a day, an automated job reads SuperValu Ireland's public search results for a fixed set of soft-drink and energy-drink queries, at human rate (one page every 3–7 seconds) and without logging in. Each product card yields the price shown, any promotion badge, the pack size and the brand label. Nothing personal is collected.</p>
+<p>A run is refused if it returns fewer than half the products of the past week, so a broken or partial page never enters the history. Re-running a day replaces that day's rows rather than duplicating them.</p>
+<h3>How prices are modelled</h3>
+<ul>
+<li><strong>Price per litre</strong> divides the price by the total volume of the pack, so a 12-can pack and a 2 L bottle are comparable.</li>
+<li><strong>Regular price</strong>: on days without a promotion, or with a multibuy, the card shows the shelf price. On price-cut, Rewards-price and value-badge days, the regular price is carried forward from the latest clean day.</li>
+<li><strong>Price paid after promotions</strong> applies the promotional price, or the per-unit price of a multibuy when the offer is taken.</li>
+<li><strong>Like-for-like</strong> comparisons match pack size, pack count, container and sugar tier. Cola comparisons exclude flavoured and caffeine-free variants.</li>
+</ul>
+<h3>What the numbers do and do not say</h3>
+<p>The levy ratio compares the full-sugar premium with the tax per litre. It is a benchmark, not a measured pass-through: the premium also reflects each pack's pricing strategy. Shelf prices show three of the four revenue-growth-management levers — price, pack and mix, promotion. Trade investment, volumes and margins are not observable here, and no finding claims them.</p>
+<h3>Source, compliance and ownership</h3>
+<p>Source: shop.supervalu.ie public search results. Compliance-by-design statement: <a href="https://github.com/Gadiel-Analytics/fmcg-price-intelligence/blob/main/COMPLIANCE.md">COMPLIANCE.md</a>. Full model and code: <a href="https://github.com/Gadiel-Analytics/fmcg-price-intelligence">github.com/Gadiel-Analytics/fmcg-price-intelligence</a>.</p>
+<p>© 2026 Gadiel Guadarrama. All rights reserved. The source code is available for viewing and evaluation; reuse requires written permission — see <a href="https://github.com/Gadiel-Analytics/fmcg-price-intelligence/blob/main/COPYRIGHT.md">COPYRIGHT.md</a>. Not affiliated with SuperValu, Musgrave or any brand owner shown.</p>
+</div>
+</section>
+
+<section class="byline" aria-label="About the author">
+<strong>Built and maintained by Gadiel Guadarrama, M.Sc.</strong> — Decision-System Architect, founder of
+<a href="https://gadielanalytics.com/">Gadiel Analytics</a> and author of <a href="https://theanalyticssystem.com/"><em>The Analytics System</em></a>.
+<span class="muted">For pricing, RGM and decision-system advisory:</span> <a href="mailto:hello@gadielanalytics.com?subject=FMCG%20Price%20Intelligence">hello@gadielanalytics.com</a>
+</section>
 <footer>
-Source: shop.supervalu.ie public search results · collected daily at human rate via Chrome-impersonated client · prices &amp; product attributes only (no personal data).<br/>
-Regular prices on promotion days are carried forward from the latest non-promotional observation. Compliance-by-design — see COMPLIANCE.md<br/>
 <span class="contact">
 <a href="https://gadielanalytics.com/">gadielanalytics.com</a> ·
-<a href="https://x.com/GadielAnalytics">@GadielAnalytics</a> ·
-<a href="mailto:hello@gadielanalytics.com">hello@gadielanalytics.com</a> ·
-<a href="https://github.com/Gadiel-Analytics">github.com/Gadiel-Analytics</a>
+<a href="https://www.linkedin.com/company/gadielanalytics">LinkedIn</a> ·
+<a href="https://x.com/gadielanalytics">@gadielAnalytics</a> ·
+<a href="https://github.com/Gadiel-Analytics">github.com/Gadiel-Analytics</a> ·
+<a href="mailto:hello@gadielanalytics.com">hello@gadielanalytics.com</a>
 </span><br/>
+© 2026 Gadiel Guadarrama · Gadiel Analytics. All rights reserved.<br/>
 <span id="provenance"></span>
 </footer>
-</div>
+</main>
 
 <script>
 const C={full:"#c8102e",zero:"#1d6f6f",diet:"#b5830f"};
 const SUGAR={full:"Original",zero:"Zero Sugar",diet:"Diet Coke"};
+const TIER={full:"Regular sugar",no_sugar:"No sugar"};
 const MECH={multibuy:"Multibuy",price_cut:"Price cut",loyalty_price:"Rewards price",badge:"Value badge"};
+const MIN_DAYS=14, FOCAL="Coca-Cola";
 const eur=v=>v==null?"—":"€"+v.toFixed(2);
 const pct=v=>v==null?"—":(v*100).toFixed(0)+"%";
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const fmtDate=s=>s?new Date(s+"T00:00:00Z").toLocaleDateString("en-IE",{day:"numeric",month:"short",year:"numeric",timeZone:"UTC"}):"—";
 const fmtPack=r=>`${r.pack_count>1?r.pack_count+"× ":""}${r.pack} ${r.container}`;
+const empty=msg=>`<div class="empty">${msg}</div>`;
+let CUBE=null; const rendered={};
 
+/* ---------- tabs ---------- */
+const TABS=[...document.querySelectorAll('[role="tab"]')];
+const RENDER={overview:renderOverview,"sugar-tax":renderSpread,"price-architecture":renderPPL,
+  promotions:renderPromos,trends:renderTrend,competition:renderCompetition,methodology:()=>{}};
+function show(id,{focus=false,push=true}={}){
+  if(!RENDER[id]) id="overview";
+  TABS.forEach(t=>{const on=t.dataset.tab===id;
+    t.setAttribute("aria-selected",on);t.tabIndex=on?0:-1;
+    document.getElementById(t.getAttribute("aria-controls")).hidden=!on;
+    if(on&&focus) t.focus();});
+  if(CUBE&&!rendered[id]){RENDER[id]();rendered[id]=true;}
+  if(push&&location.hash!=="#"+id) history.replaceState(null,"","#"+id);
+}
+TABS.forEach((t,i)=>{
+  t.addEventListener("click",()=>show(t.dataset.tab));
+  t.addEventListener("keydown",e=>{
+    const k={ArrowRight:i+1,ArrowLeft:i-1,Home:0,End:TABS.length-1}[e.key];
+    if(k===undefined) return; e.preventDefault();
+    show(TABS[(k+TABS.length)%TABS.length].dataset.tab,{focus:true});});
+});
+window.addEventListener("hashchange",()=>show(location.hash.slice(1),{push:false}));
+window.addEventListener("beforeprint",()=>{if(!CUBE)return;Object.keys(RENDER).forEach(id=>{if(!rendered[id]){RENDER[id]();rendered[id]=true;}});});
+document.addEventListener("click",e=>{const a=e.target.closest("a[data-goto]");if(!a)return;e.preventDefault();show(a.dataset.goto);window.scrollTo({top:document.querySelector(".tabs").offsetTop-8});});
+
+/* ---------- load ---------- */
 async function load(){
-  let cube;
-  try{ cube=await (await fetch("cube.json",{cache:"no-store"})).json(); }
-  catch(e){ document.getElementById("meta").textContent="cube.json could not be loaded. Run `python run.py --export-only` to rebuild it."; return; }
-  if((cube.schema_version||1)<2){
-    document.getElementById("meta").textContent="This data file predates the current dashboard. It is rebuilt on the next daily run.";
-    return;
-  }
-  renderMeta(cube); renderKPIs(cube); renderSpread(cube); renderPPL(cube.latest||[]);
-  renderPromos(cube.promo_summary||[]); renderTrend(cube);
+  show(location.hash.slice(1)||"overview",{push:false});
+  try{ CUBE=await (await fetch("cube.json",{cache:"no-store"})).json(); }
+  catch(e){ document.getElementById("meta").textContent="The data file could not be loaded. Run `python run.py --export-only` to rebuild it."; return; }
+  if((CUBE.schema_version||1)<2){ document.getElementById("meta").textContent="This data file predates the current dashboard. It is rebuilt on the next daily run."; return; }
+  CUBE.brand_summary=CUBE.brand_summary||[]; CUBE.competition_index=CUBE.competition_index||[];
+  renderMeta(CUBE);
+  const cur=TABS.find(t=>t.getAttribute("aria-selected")==="true").dataset.tab;
+  RENDER[cur](); rendered[cur]=true;
 }
 
 function renderMeta(c){
+  const nb=c.kpis.brands_tracked||1;
   document.getElementById("meta").textContent=
-    `Daily prices since ${fmtDate(c.first_run_date)} (${c.days_of_history} days). Last run ${fmtDate(c.last_run_date)}; ${c.kpis.active_skus} SKUs listed today.`;
+    `Daily prices since ${fmtDate(c.first_run_date)} (${c.days_of_history} days). Last run ${fmtDate(c.last_run_date)}; ${c.kpis.active_skus} SKUs across ${nb} brand${nb>1?"s":""} listed today.`;
   document.getElementById("provenance").textContent=`Data file generated ${c.generated_at} (UTC).`;
   document.getElementById("levy-note").textContent=eur(c.levy.per_litre_incl_vat);
 }
 
-function renderKPIs(c){
-  const k=c.kpis, s=c.sugar_tax_spread||[];
+/* ---------- overview ---------- */
+function renderOverview(){
+  const c=CUBE,k=c.kpis,s=c.sugar_tax_spread||[];
   const top=s.slice().sort((a,b)=>b.spread_pct-a.spread_pct)[0];
   const x=v=>v==null?"—":v.toFixed(2)+"×";
+  const nb=k.brands_tracked||1;
   const cards=[
-    {l:"Premium vs levy",v:`${x(k.levy_ratio_min)}–${x(k.levy_ratio_max)}`,s:`range across ${k.formats_compared} matched formats`},
+    {l:"Premium vs levy",v:`${x(k.levy_ratio_min)}–${x(k.levy_ratio_max)}`,s:`Coca-Cola, across ${k.formats_compared} matched formats`},
     {l:"Widest premium",v:top?`+${top.spread_pct.toFixed(1)}%`:"—",s:top?`${fmtPack(top)}, full sugar over Zero`:""},
-    {l:"On promotion",v:pct(k.promo_share_sku_days),s:"of SKU-days in the history"},
-    {l:"SKUs listed",v:k.active_skus,s:"Coca-Cola, all sugar classes"},
+    {l:"On promotion",v:pct(k.promo_share_sku_days),s:"of Coca-Cola SKU-days"},
+    {l:"Brands tracked",v:nb,s:`${k.active_skus} SKUs listed today`},
   ];
   document.getElementById("kpis").innerHTML=cards.map(x=>`<div class="kpi"><div class="kpi-label">${x.l}</div><div class="kpi-value">${x.v}</div><div class="kpi-sub">${x.s}</div></div>`).join("");
+
+  const F=[];
+  if(s.length){
+    const lo=Math.min(...s.map(r=>r.spread_per_litre)),hi=Math.max(...s.map(r=>r.spread_per_litre));
+    const above=s.filter(r=>r.levy_ratio>=1).length;
+    F.push({t:`Full-sugar Coca-Cola costs €${lo.toFixed(2)}–€${hi.toFixed(2)} more per litre than Zero Sugar, between ${x(k.levy_ratio_min)} and ${x(k.levy_ratio_max)} the sugar levy; ${above} of ${s.length} formats sit above the levy.`,go:"sugar-tax",l:"See the sugar-tax spread"});
+    const both=s.filter(r=>r.diet_per_litre!=null);
+    if(both.length&&both.every(r=>Math.abs(r.diet_per_litre-r.zero_per_litre)<0.005))
+      F.push({t:`Diet Coke is priced identically to Zero Sugar in all ${both.length} matched formats: the untaxed range is priced as one, so the full-sugar premium is the only sugar-based price step.`,go:"sugar-tax",l:"See the sugar-tax spread"});
+  }
+  const pr=(c.promo_summary||[]).filter(r=>r.active&&(r.brand_family||FOCAL)===FOCAL&&r.days_observed>=MIN_DAYS);
+  const perma=pr.filter(r=>r.promo_share>=0.9);
+  if(perma.length) F.push({t:`${perma.length} Coca-Cola SKU${perma.length>1?"s were":" was"} on promotion on at least 90% of days, led by ${esc(perma[0].title)}. For these, the regular price is a reference point shoppers rarely pay.`,go:"promotions",l:"See promotions"});
+  const flat=pr.filter(r=>r.distinct_prices===1).length;
+  if(pr.length) F.push({t:`${flat} of ${pr.length} Coca-Cola SKUs with at least ${MIN_DAYS} days of history held a single shelf price throughout; price movement comes through promotions, not list-price changes.`,go:"trends",l:"See trends"});
+  const ci=c.competition_index.filter(r=>r.segment==="Cola"&&r.brand_family!==r.ref_family);
+  const fams=[...new Set(ci.map(r=>r.brand_family))];
+  fams.forEach(f=>{const rr=ci.filter(r=>r.brand_family===f);
+    const avg=rr.reduce((a,r)=>a+r.regular_index,0)/rr.length;
+    F.push({cls:"comp",t:`${esc(f)} is priced at an average index of ${avg.toFixed(0)} against Coca-Cola (= 100) per litre, across ${rr.length} shared format${rr.length>1?"s":""} and sugar tiers.`,go:"competition",l:"See competition"});});
+  if(!fams.length&&(k.brands_tracked||1)<2) F.push({cls:"comp",t:"Competitor prices (Pepsi, own-label, lemon-lime, orange and energy brands) start with the next daily run and appear here automatically.",go:"competition",l:"About the competition view"});
+  document.getElementById("findings").innerHTML=F.map(f=>`<div class="finding ${f.cls||""}"><p>${f.t}</p><a href="#${f.go}" data-goto="${f.go}">${f.l}</a></div>`).join("");
 }
 
-function renderSpread(c){
-  const el=document.getElementById("spread"), rows=(c.sugar_tax_spread||[]).slice();
-  if(!rows.length){el.innerHTML='<div class="empty">No matched full-sugar and Zero pairs are listed today.</div>';return;}
+/* ---------- sugar tax ---------- */
+function renderSpread(){
+  const el=document.getElementById("spread"), rows=(CUBE.sugar_tax_spread||[]).slice();
+  if(!rows.length){el.innerHTML=empty("No matched full-sugar and Zero pairs are listed today.");return;}
   rows.sort((a,b)=>b.levy_ratio-a.levy_ratio);
   const maxR=Math.max(...rows.map(r=>r.levy_ratio),1);
-  el.innerHTML=`<table><thead><tr><th>Format</th><th class="num">Original €/L</th><th class="num">Zero €/L</th>
+  el.innerHTML=`<table><thead><tr><th>Format</th><th class="num">Original €/L</th><th class="num">Zero €/L</th><th class="num">Diet €/L</th>
   <th class="num">Premium €/L</th><th class="num">Premium %</th><th class="num">× levy</th><th class="num">Premium after promos</th></tr></thead><tbody>
   ${rows.map(r=>{
     const cls=r.levy_ratio>=1?"levy-hi":"levy-lo", w=r.levy_ratio/maxR*90;
     const eff=r.any_promo?`${r.spread_effective_per_litre>0?"+":""}${r.spread_effective_per_litre.toFixed(2)}`:'<span class="muted">no promo</span>';
-    return `<tr><td>${fmtPack(r)}</td><td class="num">${r.full_per_litre.toFixed(2)}</td><td class="num">${r.zero_per_litre.toFixed(2)}</td>
+    return `<tr><td class="fmt">${fmtPack(r)}</td><td class="num">${r.full_per_litre.toFixed(2)}</td><td class="num">${r.zero_per_litre.toFixed(2)}</td>
+    <td class="num">${r.diet_per_litre==null?'<span class="muted">—</span>':r.diet_per_litre.toFixed(2)}</td>
     <td class="num">+${r.spread_per_litre.toFixed(2)}</td><td class="num">+${r.spread_pct.toFixed(1)}%</td>
     <td class="num bar-cell ${cls}"><span class="bar" style="width:${w}px"></span>${r.levy_ratio.toFixed(2)}×</td>
-    <td class="num">${eff}</td></tr>`;}).join("")}</tbody></table>`;
+    <td class="num">${eff}</td></tr>`;}).join("")}</tbody></table>${parityNote(rows)}`;
+}
+function parityNote(rows){
+  const both=rows.filter(r=>r.diet_per_litre!=null);
+  if(!both.length) return "";
+  const same=both.filter(r=>Math.abs(r.diet_per_litre-r.zero_per_litre)<0.005).length;
+  return same===both.length
+    ? `<p class="note">Diet Coke is priced identically to Zero Sugar in all ${both.length} formats where both are listed: the untaxed range is priced as one.</p>`
+    : `<p class="note">Diet Coke matches the Zero Sugar price in ${same} of ${both.length} formats where both are listed.</p>`;
 }
 
-function renderPPL(rows){
+/* ---------- price architecture ---------- */
+function renderPPL(){
   const el=document.getElementById("ppl");
-  const data=rows.filter(r=>r.is_core&&r.regular_ppl!=null);
-  if(!data.length){el.innerHTML='<div class="empty">No listed SKUs with a regular price yet.</div>';return;}
+  const data=(CUBE.latest||[]).filter(r=>r.is_core&&r.regular_ppl!=null&&(r.brand_family||FOCAL)===FOCAL);
+  if(!data.length){el.innerHTML=empty("No listed Coca-Cola SKUs with a regular price yet.");return;}
   data.sort((a,b)=>b.total_litres-a.total_litres||a.sugar_class.localeCompare(b.sugar_class));
-  const W=el.clientWidth||980,bar=26,H=data.length*bar+40,M={t:10,r:60,b:24,l:200};
+  const W=Math.max(el.clientWidth,320)||980,bar=26,H=data.length*bar+40,M={t:10,r:60,b:24,l:200};
   const x=d3.scaleLinear().domain([0,d3.max(data,d=>d.regular_ppl)*1.1]).range([M.l,W-M.r]);
-  const svg=d3.select(el).append("svg").attr("viewBox",`0 0 ${W} ${H}`).attr("width","100%").attr("role","img")
-    .attr("aria-label","Regular price per litre by SKU");
+  const svg=d3.select(el).append("svg").attr("viewBox",`0 0 ${W} ${H}`).attr("width","100%").attr("role","img").attr("aria-label","Regular price per litre by Coca-Cola SKU");
   svg.append("g").attr("class","chart-axis").attr("transform",`translate(0,${H-M.b})`).call(d3.axisBottom(x).ticks(6).tickFormat(d=>"€"+d.toFixed(2)));
-  data.forEach((d,i)=>{
-    const y=M.t+i*bar;
+  data.forEach((d,i)=>{const y=M.t+i*bar;
     svg.append("rect").attr("x",M.l).attr("y",y).attr("width",x(d.regular_ppl)-M.l).attr("height",bar-8).attr("fill",C[d.sugar_class]||"#888").attr("opacity",.85).attr("rx",2);
     svg.append("text").attr("x",M.l-8).attr("y",y+(bar-8)/2).attr("dy",".35em").attr("text-anchor","end").style("font-family","'IBM Plex Mono',monospace").style("font-size","10px").style("fill","var(--ink)").text(`${SUGAR[d.sugar_class]} ${d.pack_count>1?d.pack_count+"×":""}${d.pack} ${d.container}`);
-    svg.append("text").attr("x",x(d.regular_ppl)+6).attr("y",y+(bar-8)/2).attr("dy",".35em").style("font-family","'IBM Plex Mono',monospace").style("font-size","10px").style("fill","var(--muted)").text(eur(d.regular_ppl));
-  });
+    svg.append("text").attr("x",x(d.regular_ppl)+6).attr("y",y+(bar-8)/2).attr("dy",".35em").style("font-family","'IBM Plex Mono',monospace").style("font-size","10px").style("fill","var(--muted)").text(eur(d.regular_ppl));});
   const present=[...new Set(data.map(d=>d.sugar_class))];
   document.getElementById("ppl-legend").innerHTML=present.map(k=>`<span><i class="swatch" style="background:${C[k]}"></i>${SUGAR[k]}</span>`).join("");
 }
 
-function renderPromos(rows){
-  const el=document.getElementById("promos");
-  const data=rows.filter(r=>r.active&&r.promo_share>0);
-  if(!data.length){el.innerHTML='<div class="empty">No promotions recorded for listed SKUs.</div>';return;}
-  el.innerHTML=`<table><thead><tr><th>Product</th><th class="num">Days on promotion</th><th>Mechanics seen</th>
-  <th class="num">Typical cut</th><th class="num">Deepest cut</th></tr></thead><tbody>
-  ${data.map(r=>`<tr><td>${r.title}</td><td class="num">${pct(r.promo_share)} <span class="muted">of ${r.days_observed}</span></td>
-  <td>${(r.mechanics||"").split(", ").filter(Boolean).map(m=>`<span class="tag">${MECH[m]||m}</span>`).join("")}</td>
-  <td class="num">${pct(r.avg_depth)}</td><td class="num">${pct(r.max_depth)}</td></tr>`).join("")}</tbody></table>
-  <p class="note">A SKU on promotion on most days has a regular price that shoppers rarely pay; treat its regular price as a reference point rather than a typical price.</p>`;
+/* ---------- promotions ---------- */
+function renderPromos(){
+  const sel=document.getElementById("promo-brand");
+  const all=(CUBE.promo_summary||[]).filter(r=>r.active);
+  const fams=[...new Set(all.map(r=>r.brand_family||FOCAL))];
+  sel.innerHTML=fams.map(f=>`<option value="${esc(f)}">${esc(f)}</option>`).join("")+(fams.length>1?'<option value="__all">All brands</option>':"");
+  sel.value=fams.includes(FOCAL)?FOCAL:fams[0];
+  const draw=()=>{
+    const el=document.getElementById("promos"), v=sel.value;
+    const pool=all.filter(r=>v==="__all"||(r.brand_family||FOCAL)===v);
+    const data=pool.filter(r=>r.promo_share>0&&r.days_observed>=MIN_DAYS);
+    const young=pool.filter(r=>r.days_observed<MIN_DAYS).length;
+    const yn=young?` ${young} listed SKU${young>1?"s have":" has"} under ${MIN_DAYS} days of history and ${young>1?"are":"is"} not shown yet.`:"";
+    if(!data.length){el.innerHTML=empty(`No promotions recorded yet for this selection.${yn}`);return;}
+    const showBrand=v==="__all";
+    el.innerHTML=`<table><thead><tr><th>Product</th>${showBrand?"<th>Brand</th>":""}<th class="num">Days on promotion</th><th>Mechanics seen</th>
+    <th class="num">Typical cut</th><th class="num">Deepest cut</th></tr></thead><tbody>
+    ${data.map(r=>`<tr><td>${esc(r.title)}</td>${showBrand?`<td>${esc(r.brand_family||FOCAL)}</td>`:""}<td class="num">${pct(r.promo_share)} <span class="muted">of ${r.days_observed}</span></td>
+    <td>${(r.mechanics||"").split(", ").filter(Boolean).map(m=>`<span class="tag">${MECH[m]||esc(m)}</span>`).join("")}</td>
+    <td class="num">${pct(r.avg_depth)}</td><td class="num">${pct(r.max_depth)}</td></tr>`).join("")}</tbody></table>
+    <p class="note">A SKU on promotion on most days has a regular price that shoppers rarely pay; treat its regular price as a reference point rather than a typical price.${yn}</p>`;
+  };
+  sel.onchange=draw; draw();
 }
 
-function renderTrend(c){
-  const el=document.getElementById("trend"), rows=c.trend||[];
-  const formats=(c.sugar_tax_spread||[]).map(r=>r.format_key);
-  if(!rows.length||!formats.length){el.innerHTML='<div class="empty">The trend appears once matched formats have at least two days of history.</div>';return;}
-  const parse=s=>new Date(s+"T00:00:00Z");
-  const xDom=d3.extent(rows,r=>parse(r.date));
+/* ---------- trends ---------- */
+function renderTrend(){
+  const el=document.getElementById("trend"), rows=CUBE.trend||[];
+  const formats=(CUBE.sugar_tax_spread||[]).map(r=>r.format_key);
+  if(!rows.length||!formats.length){el.innerHTML=empty("The trend appears once matched formats have at least two days of history.");return;}
+  const parse=s=>new Date(s+"T00:00:00Z"), xDom=d3.extent(rows,r=>parse(r.date));
   formats.forEach(fk=>{
-    const fr=rows.filter(r=>r.format_key===fk&&(r.sugar_class==="full"||r.sugar_class==="zero"||r.sugar_class==="diet"));
-    if(!fr.length) return;
-    const box=d3.select(el).append("div").attr("class","mini");
-    const sample=fr[0]; box.append("h4").text(fmtPack(sample));
+    const fr=rows.filter(r=>r.format_key===fk&&C[r.sugar_class]); if(!fr.length) return;
+    const box=d3.select(el).append("div").attr("class","mini"); box.append("h4").text(fmtPack(fr[0]));
     const W=320,H=150,M={t:8,r:8,b:22,l:40};
     const lo=d3.min(fr,r=>Math.min(r.effective_ppl,r.regular_ppl)), hi=d3.max(fr,r=>Math.max(r.effective_ppl,r.regular_ppl));
-    const x=d3.scaleUtc().domain(xDom).range([M.l,W-M.r]);
-    const y=d3.scaleLinear().domain([lo*.92,hi*1.05]).nice().range([H-M.b,M.t]);
-    const svg=box.append("svg").attr("viewBox",`0 0 ${W} ${H}`).attr("width","100%").attr("role","img").attr("aria-label",`Price per litre over time, ${fmtPack(sample)}`);
+    const x=d3.scaleUtc().domain(xDom).range([M.l,W-M.r]), y=d3.scaleLinear().domain([lo*.92,hi*1.05]).nice().range([H-M.b,M.t]);
+    const svg=box.append("svg").attr("viewBox",`0 0 ${W} ${H}`).attr("width","100%").attr("role","img").attr("aria-label",`Price per litre over time, ${fmtPack(fr[0])}`);
     svg.append("g").attr("class","chart-axis").attr("transform",`translate(0,${H-M.b})`).call(d3.axisBottom(x).ticks(4).tickFormat(d3.utcFormat("%b")));
     svg.append("g").attr("class","chart-axis").attr("transform",`translate(${M.l},0)`).call(d3.axisLeft(y).ticks(4).tickFormat(d=>"€"+d.toFixed(2)));
     for(const [k,v] of d3.group(fr,r=>r.sugar_class)){
       const s=v.slice().sort((a,b)=>a.date.localeCompare(b.date));
       const line=acc=>d3.line().x(d=>x(parse(d.date))).y(d=>y(d[acc])).curve(d3.curveStepAfter);
+      if(s.length<2) continue;
       svg.append("path").datum(s).attr("fill","none").attr("stroke",C[k]).attr("stroke-width",1).attr("stroke-dasharray","3 3").attr("opacity",.6).attr("d",line("regular_ppl"));
       svg.append("path").datum(s).attr("fill","none").attr("stroke",C[k]).attr("stroke-width",2).attr("d",line("effective_ppl"));
     }
   });
-  const shown=[...new Set(rows.filter(r=>formats.includes(r.format_key)).map(r=>r.sugar_class))];
-  document.getElementById("trend-legend").innerHTML=shown.filter(k=>C[k]).map(k=>`<span><i class="swatch" style="background:${C[k]}"></i>${SUGAR[k]}</span>`).join("")+
-    `<span>Solid: price paid after promotions · Dashed: regular price</span>`;
+  const shown=[...new Set(rows.filter(r=>formats.includes(r.format_key)).map(r=>r.sugar_class))].filter(k=>C[k]&&rows.filter(r=>r.sugar_class===k).length>formats.length);
+  document.getElementById("trend-legend").innerHTML=shown.map(k=>`<span><i class="swatch" style="background:${C[k]}"></i>${SUGAR[k]}</span>`).join("")+`<span>Solid: price paid after promotions · Dashed: regular price</span>`;
+}
+
+/* ---------- competition ---------- */
+function renderCompetition(){
+  const el=document.getElementById("comp-body"), bs=CUBE.brand_summary, ci=CUBE.competition_index;
+  if(bs.length<2){
+    el.innerHTML=`<div class="panel">${empty("Competitor collection starts with the next daily run after this release: Pepsi, SuperValu own-label cola, Sprite, 7UP, Fanta, Club, Red Bull and Monster. This view fills in automatically.")}</div>`;
+    return;
+  }
+  const hist=r=>r.days_observed>=MIN_DAYS;
+  let h=`<div class="panel"><div class="table-wrap"><table><thead><tr><th>Brand</th><th>Owner</th><th>Segment</th><th class="num">SKUs listed</th>
+  <th class="num">€/L range</th><th class="num">Full-sugar premium</th><th class="num">Days on promotion</th><th class="num">Typical cut</th></tr></thead><tbody>
+  ${bs.map(r=>`<tr><td>${esc(r.brand_family)}${r.private_label?' <span class="tag">own-label</span>':""}</td><td class="muted">${esc(r.owner)}</td><td class="fmt">${esc(r.segment)}</td>
+   <td class="num">${r.skus}</td><td class="num fmt">${r.min_ppl===r.max_ppl?eur(r.min_ppl):`${eur(r.min_ppl)}–${eur(r.max_ppl).slice(1)}`}</td>
+   <td class="num">${r.sugar_premium==null?'<span class="muted">—</span>':(r.sugar_premium>=0?"+":"")+pct(r.sugar_premium)}</td>
+   <td class="num">${hist(r)?pct(r.promo_share):'<span class="muted">new</span>'}</td><td class="num">${hist(r)&&r.avg_depth!=null?pct(r.avg_depth):'<span class="muted">—</span>'}</td></tr>`).join("")}
+  </tbody></table></div>
+  <p class="note">Full-sugar premium: median, across matched formats, of each brand's regular-sugar price per litre over its own no-sugar range. Promotion figures appear once a brand has ${MIN_DAYS} days of history.</p></div>`;
+  const segs=[...new Set(ci.map(r=>r.segment))];
+  if(!segs.length) h+=`<div class="panel" style="margin-top:20px">${empty("No format is yet listed by two brands of the same segment.")}</div>`;
+  segs.forEach(sg=>{
+    const rows=ci.filter(r=>r.segment===sg), fams=[...new Set(rows.map(r=>r.brand_family))];
+    const ref=rows[0].ref_family, cells=[...new Set(rows.map(r=>r.format_key+"|"+r.sugar_tier))];
+    h+=`<div class="seg-title">${esc(sg)}: price per litre vs ${esc(ref)} (= 100)</div><div class="panel"><div class="table-wrap"><table><thead><tr><th>Format</th><th>Sugar</th>
+    ${fams.map(f=>`<th class="num">${esc(f)}</th>`).join("")}</tr></thead><tbody>
+    ${cells.map(key=>{const [fk,tier]=key.split("|");const rr=rows.filter(r=>r.format_key===fk&&r.sugar_tier===tier);
+      return `<tr><td class="fmt">${fmtPack(rr[0])}</td><td>${TIER[tier]}</td>${fams.map(f=>{const r=rr.find(x=>x.brand_family===f);
+        return r?`<td class="num">${r.regular_ppl.toFixed(2)} <span class="idx">${r.brand_family===ref?"":r.regular_index}</span></td>`:'<td class="num muted">—</td>';}).join("")}</tr>`;}).join("")}
+    </tbody></table></div><p class="note">€ per litre at regular shelf prices; small figures are the index against ${esc(ref)}. Price only: nothing here measures volumes, margins or trade terms.</p></div>`;
+  });
+  el.innerHTML=h;
 }
 load();
 </script>

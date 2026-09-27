@@ -1,5 +1,48 @@
 # Changelog
 
+## F0.1 + F2 — Brand, navigation and competition (2026-09-27)
+
+### Competition (F2)
+- Twelve search queries now cover Coca-Cola, Pepsi, SuperValu own-label cola, Sprite, 7UP, Fanta,
+  Club, Red Bull and Monster. Brands carry family, owner and segment in `config/catalog.yaml`,
+  mapped in SQL so changes apply retroactively.
+- Per-brand sugar terms (e.g. Pepsi Max, 7UP Free, Red Bull Sugarfree, Monster Ultra count as
+  no-sugar); "caffeine free" and "zero caffeine" no longer affect sugar classification.
+- Guards: cards without a stated volume are skipped (e.g. biscuits sharing a brand word);
+  own-label entries must mention cola; the run log lists brand labels the filter dropped.
+- New cube tables: `competition_index` (like-for-like €/L index against each segment's reference
+  brand) and `brand_summary` (coverage, price range, promotion intensity, full-sugar premium over
+  the brand's own no-sugar range). Cube schema v3; the dashboard still reads v2 files.
+- The sugar-tax spread, levy ratio, Coca-Cola trend and price-architecture views stay Coca-Cola only.
+- Per-run SKU cap raised from 60 to 200.
+
+### Pricing model
+- A SKU never observed at a clean (non-promotional) price now has an unknown regular price and
+  promotion depth, instead of a regular price equal to its promotional price (which reported 0%
+  cuts for permanently promoted SKUs). No Coca-Cola figure changes: every Coca-Cola SKU has clean
+  observations.
+
+### Dashboard
+- Seven tabs replace the single long page: Overview, Sugar tax, Price architecture, Promotions,
+  Trends, Competition, Methodology. Keyboard navigation (arrow keys, Home, End), deep links
+  (`#promotions`), and a print layout that includes every tab.
+- Overview: KPIs plus findings recomputed on every run, each linked to its evidence.
+- Promotions: brand filter; SKUs with under 14 days of history are held back and counted.
+- Sugar tax: Diet Coke column and a Diet/Zero price-parity note.
+- Methodology tab: collection, pricing model, what the numbers do and do not say, ownership.
+
+### Brand and ownership
+- Gadiel Analytics brand bar (bordered monogram on the navy bar, links to Work, Consulting, About,
+  Source), author byline, LinkedIn link, copyright line.
+- Share metadata (Open Graph, X cards, canonical, theme colour), branded 1200 × 630 share image,
+  favicon.
+- **Licence:** `COPYRIGHT.md` — all rights reserved; source available for viewing and evaluation,
+  consistent with the other flagship Gadiel Analytics products.
+
+### Data notes
+- First F0 run: 11 Diet Coke SKUs collected; SuperValu labels them "Diet Coke" (Q-002). Quality
+  gate passed; 4 Jun duplicates removed (2,911 rows).
+
 ## F0 — Hardening (2026-09-26)
 
 ### Data corrections

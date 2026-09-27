@@ -10,7 +10,7 @@
 | **Data type** | Public product attributes & shelf prices only | Factual, non-personal — lowest legal-risk category |
 | **Personal data** | None collected | Keeps project fully outside GDPR subject-data scope |
 | **Source** | `shop.supervalu.ie` public search-results pages | Publicly accessible without authentication |
-| **Volume** | 3 search pages, ~25–35 SKUs, once daily | Traffic indistinguishable from a single human shopper |
+| **Volume** | 12 search pages, up to 200 SKUs, once daily (~1 minute of paced requests) | Traffic indistinguishable from a single human shopper |
 | **Purpose** | Price-monitoring / market research / portfolio demonstration | Recognised legitimate-interest use case |
 
 ## Operating principles
@@ -48,4 +48,4 @@ Public, non-personal, factual price data collected at human rate for market-rese
 the lowest-risk band under both EU and US frameworks. This is a non-commercial, personal portfolio
 project. This document is a good-faith compliance statement and does not constitute legal advice.
 
-_Last reviewed: 2026-09-26_
+_Last reviewed: 2026-09-27_

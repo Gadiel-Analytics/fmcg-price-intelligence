@@ -6,10 +6,10 @@ from scraper import PriceRecord
 
 
 def rec(day, sku, title, sugar, price, promo=None, pack="2 L", count=1, litres=2.0, container="PET",
-        hour="08"):
+        hour="08", brand="Coca-Cola"):
     return PriceRecord(
         scraped_at=f"2026-07-{day:02d}T{hour}:00:00+00:00", retailer="supervalu_ie", market="IE",
-        currency="EUR", product_id=sku, brand="Coca-Cola", variant="x", sugar_class=sugar,
+        currency="EUR", product_id=sku, brand=brand, variant="x", sugar_class=sugar,
         pack=pack, container=container, title=title, base_price=price,
         unit_price=round(price / litres, 2), unit_price_basis="litre", clubcard_price_text=promo,
         deposit=None, sugar_g_per_serving=None, source_url="u", status="OK",
@@ -69,3 +69,43 @@ def test_spread_uses_regular_prices_and_levy(lake):
     assert s.full_per_litre == 2.10 and s.zero_per_litre == 1.70
     assert s.spread_per_litre == 0.40 and s.levy_ratio == 1.33
     assert s.spread_effective_per_litre == pytest.approx(0.93, abs=0.01)   # 2.10 - 1.175
+
+
+def test_competition_index_and_brand_summary(tmp_path):
+    p = tmp_path / "c.parquet"
+    ds.ingest([
+        rec(1, "F", FULL, "full", 4.20), rec(1, "Z", ZERO, "zero", 3.40),
+        rec(1, "PF", "Pepsi Bottle (2 L)", "full", 3.00, brand="Pepsi"),
+        rec(1, "PZ", "Pepsi Max Bottle (2 L)", "zero", 3.00, "2 for €5", brand="Pepsi"),
+        rec(1, "OL", "SuperValu Cola Bottle (2 L)", "full", 1.00, brand="SuperValu"),
+        rec(1, "M", "Monster Energy Drink Can (500 ml)", "full", 2.20, pack="500 ml",
+            litres=0.5, container="Can", brand="Monster"),
+    ], p)
+    con = ds.connect(p, 2)
+    ci = ds.competition_index(con)
+    full = ci[(ci.sugar_tier == "full")].set_index("brand_family")
+    assert full.loc["Coca-Cola", "regular_index"] == 100
+    assert full.loc["Pepsi", "regular_index"] == 71            # 1.50 / 2.10
+    assert full.loc["SuperValu own-label", "regular_index"] == 24
+    assert set(ci.segment) == {"Cola"}                           # Monster has no rival format
+    bs = ds.brand_summary(con).set_index("brand_family")
+    assert bs.loc["Coca-Cola", "sugar_premium"] == pytest.approx(0.235, abs=0.001)
+    assert bs.loc["Pepsi", "sugar_premium"] == 0.0              # Pepsi and Pepsi Max at parity
+    assert bs.loc["Pepsi", "promo_share"] == 0.5
+    assert bool(bs.loc["SuperValu own-label", "private_label"])
+
+
+def test_spread_is_coca_cola_only(tmp_path):
+    p = tmp_path / "s.parquet"
+    ds.ingest([rec(1, "F", FULL, "full", 4.20), rec(1, "Z", ZERO, "zero", 3.40),
+               rec(1, "PF", "Pepsi Bottle (2 L)", "full", 9.00, brand="Pepsi")], p)
+    s = ds.sugar_tax_spread(ds.connect(p, 2), 0.30).iloc[0]
+    assert s.full_per_litre == 2.10
+
+
+def test_regular_price_unknown_when_never_seen_clean(tmp_path):
+    p = tmp_path / "u.parquet"
+    ds.ingest([rec(1, "S", "7UP Free Bottle (2 L)", "zero", 2.00, "Only €2.00", brand="7UP")], p)
+    row = ds.connect(p, 2).execute(
+        "SELECT regular_price, regular_ppl, promo_depth FROM priced").fetchone()
+    assert row == (None, None, None)

@@ -1,5 +1,5 @@
 # =============================================================================
-# Catalog — Coca-Cola CSD portfolio @ SuperValu Ireland
+# Catalog — Carbonated soft drinks & energy @ SuperValu Ireland
 # =============================================================================
 # Search-query driven: the scraper runs each query against SuperValu's search,
 # extracts every product card, and keeps those matching a configured brand.
@@ -23,17 +23,74 @@ search_queries:
   - "coca cola"
   - "coca cola zero"
   - "diet coke"
+  - "pepsi"
+  - "pepsi max"
+  - "7up"
+  - "sprite"
+  - "fanta"
+  - "club orange"
+  - "cola"
+  - "red bull"
+  - "monster energy"
 
-# Brands to keep. A card is kept when its brand label (or, if the card has no
-# brand label, its title) contains one of the `match` terms (case-insensitive,
-# hyphens ignored). `manufacturer` is carried for competitive analysis.
+# Brands to keep, in priority order (first match wins). A card is kept when its
+# brand label — or its title, if the card has no brand label — contains one of
+# the `match` terms (case-insensitive, hyphens ignored).
+#   family      reporting name used across the dashboard
+#   owner       brand owner, for competitive context
+#   segment     like-for-like comparison group; the first family listed in a
+#               segment is its reference brand (index = 100)
+#   zero_terms  title terms meaning "no sugar" for this brand, on top of the
+#               defaults ("zero sugar", "no sugar", "zero"). "Caffeine free"
+#               and "zero caffeine" are removed before matching.
+#   title_must_contain   extra guard for broad brand labels (own-label)
 brands:
-  - name: "Coca-Cola"
-    manufacturer: "The Coca-Cola Company"
+  - family: "Coca-Cola"
+    owner: "The Coca-Cola Company"
+    segment: "Cola"
     match: ["coca cola", "diet coke", "coke"]
+  - family: "Pepsi"
+    owner: "PepsiCo"
+    segment: "Cola"
+    match: ["pepsi"]
+    zero_terms: ["max"]
+  - family: "SuperValu own-label"
+    owner: "Musgrave (SuperValu)"
+    segment: "Cola"
+    private_label: true
+    match: ["supervalu"]
+    title_must_contain: ["cola"]
+  - family: "Sprite"
+    owner: "The Coca-Cola Company"
+    segment: "Lemon-lime"
+    match: ["sprite"]
+  - family: "7UP"
+    owner: "PepsiCo"
+    segment: "Lemon-lime"
+    match: ["7up", "7 up"]
+    zero_terms: ["free"]
+  - family: "Fanta"
+    owner: "The Coca-Cola Company"
+    segment: "Orange & fruit"
+    match: ["fanta"]
+  - family: "Club"
+    owner: "Britvic"
+    segment: "Orange & fruit"
+    match: ["club"]
+    title_must_contain: ["orange", "lemon", "rock shandy", "apple", "zero"]
+  - family: "Red Bull"
+    owner: "Red Bull"
+    segment: "Energy"
+    match: ["red bull"]
+    zero_terms: ["sugarfree", "sugar free"]
+  - family: "Monster"
+    owner: "Monster Beverage"
+    segment: "Energy"
+    match: ["monster"]
+    zero_terms: ["ultra"]
 
 # Titles containing any of these terms are dropped even if the brand matches
-# (e.g. spirit-and-cola ready-to-drink cans that carry the Coca-Cola name).
+# (e.g. spirit-and-cola ready-to-drink cans that carry a soft-drink name).
 exclude_title_terms: ["whiskey", "rum", "vodka", "jack daniel"]
 
 analysis:
@@ -55,5 +112,5 @@ quality:
 
 compliance:
   request_delay_seconds: [3, 7]
-  max_skus_per_run: 60          # hard cap across all queries in one run
+  max_skus_per_run: 200         # hard cap across all queries in one run
   user_agent: "GadielAnalytics-PriceIntel/0.2 (portfolio research; +github.com/Gadiel-Analytics)"

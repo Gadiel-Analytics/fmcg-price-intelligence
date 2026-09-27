@@ -1,5 +1,5 @@
 """
-FMCG Price Intelligence — Scraper Core · SuperValu Ireland
+FMCG Price Intelligence — Scraper Core · SuperValu Ireland (CSD & energy)
 ==========================================================
 Fetches public search-results pages from SuperValu (shop.supervalu.ie) and
 extracts RGM-relevant price signals from each product card, with normalised
@@ -15,7 +15,8 @@ Design:
 - Card parsing keyed on stable `data-testid` attributes.
 - Pack-aware normalisation: detects multipacks (Twin Pack, N Pack), computes total
   litres and EUR/litre so multipacks and singles are comparable.
-- Brand matching from config (brand label first, title as fallback).
+- Brand resolution from config (brand label first, title as fallback), with
+  per-brand sugar terms and guards; non-drinks (no stated volume) are skipped.
 - Search-query driven; compliance-by-design (human-rate delays, honest UA,
   per-run SKU cap, provenance incl. the originating search query).
 
@@ -86,23 +87,34 @@ def _norm(text: str | None) -> str:
     return re.sub(r"[-\s]+", " ", (text or "").lower()).strip()
 
 
-def classify_sugar(name: str) -> str:
-    n = name.lower()
-    if "zero sugar" in n or "no sugar" in n or re.search(r"\bzero\b(?!\s+caffeine)", n):
+CAFFEINE_PHRASES = re.compile(r"caffeine\s*free|zero\s*caffeine", re.IGNORECASE)
+
+
+def classify_sugar(name: str, brand_cfg: dict | None = None) -> str:
+    """full | zero | diet. Brand-specific `zero_terms` extend the defaults."""
+    n = CAFFEINE_PHRASES.sub(" ", name.lower())
+    extra = [t.lower() for t in (brand_cfg or {}).get("zero_terms", [])]
+    if "zero sugar" in n or "no sugar" in n or re.search(r"\bzero\b", n):
+        return "zero"
+    if any(re.search(rf"\b{re.escape(t)}\b", n) for t in extra):
         return "zero"
     if "diet" in n or "light" in n:
         return "diet"
     return "full"
 
 
-def classify_variant(name: str) -> str:
-    """Plain 'Coca-Cola Bottle/Can' (no modifier) is the Original."""
+def classify_variant(name: str, brand_cfg: dict | None = None) -> str:
+    """Coca-Cola keeps its named variants; other brands get a sugar-tier label."""
+    family = (brand_cfg or {}).get("family", "Coca-Cola")
     n = name.lower()
+    sugar = classify_sugar(name, brand_cfg)
+    if family != "Coca-Cola":
+        return {"zero": "No sugar", "diet": "Diet"}.get(sugar, "Regular")
     if "cherry" in n:
         return "Cherry"
     if "vanilla" in n:
         return "Vanilla"
-    if classify_sugar(name) == "zero":
+    if sugar == "zero":
         return "Zero Sugar"
     if "diet" in n:
         return "Diet Coke"
@@ -148,16 +160,28 @@ def price_per_litre(name: str, price: float | None) -> float | None:
     return round(price / tl, 2) if (tl and price) else None
 
 
-def brand_matches(card_brand: str | None, title: str, config: dict) -> bool:
-    """Brand label decides when present; the title is only a fallback."""
+def resolve_brand(card_brand: str | None, title: str, config: dict) -> dict | None:
+    """Return the configured brand entry for a card, or None to drop it.
+    The brand label decides when present; the title is only a fallback."""
     excluded = [_norm(t) for t in config.get("exclude_title_terms", [])]
-    if any(t in _norm(title) for t in excluded):
-        return False
+    ntitle = _norm(title)
+    if any(t in ntitle for t in excluded):
+        return None
     brands = config.get("brands") or []
     if not brands:
-        return True
-    target = _norm(card_brand) if card_brand else _norm(title)
-    return any(_norm(term) in target for b in brands for term in b.get("match", []))
+        return {}
+    target = _norm(card_brand) if card_brand else ntitle
+    for b in brands:
+        if any(_norm(term) in target for term in b.get("match", [])):
+            guard = [_norm(t) for t in b.get("title_must_contain", [])]
+            if guard and not any(g in ntitle for g in guard):
+                continue
+            return b
+    return None
+
+
+def brand_matches(card_brand: str | None, title: str, config: dict) -> bool:
+    return resolve_brand(card_brand, title, config) is not None
 
 
 # --- Card parsing ------------------------------------------------------------
@@ -188,8 +212,11 @@ def parse_cards(html: str) -> list[dict]:
 
 
 def build_records(cards: list[dict], config: dict, query: str, now: str,
-                  page_url: str, seen: set[str], budget: int) -> list[PriceRecord]:
-    """Turn parsed cards into records. `budget` = SKUs still allowed this run."""
+                  page_url: str, seen: set[str], budget: int,
+                  dropped: dict[str, int] | None = None) -> list[PriceRecord]:
+    """Turn parsed cards into records. `budget` = SKUs still allowed this run.
+    `dropped` (optional) counts brand labels rejected by the brand filter,
+    which the run log prints to help tune `brands` in the catalog."""
     retailer = config["retailer"]
     out: list[PriceRecord] = []
     for c in cards:
@@ -197,16 +224,22 @@ def build_records(cards: list[dict], config: dict, query: str, now: str,
             break
         if c["sku"] in seen or c["base_price"] is None:
             continue
-        if not brand_matches(c["brand"], c["name"], config):
+        name = c["name"]
+        if total_litres(name) is None:   # not a drink with a stated volume
+            continue
+        b = resolve_brand(c["brand"], name, config)
+        if b is None:
+            if dropped is not None:
+                key = c["brand"] or "(no brand label)"
+                dropped[key] = dropped.get(key, 0) + 1
             continue
         seen.add(c["sku"])
-        name = c["name"]
         out.append(PriceRecord(
             scraped_at=now, retailer=retailer["code"], market=retailer["market"],
             currency=retailer["currency"], product_id=c["sku"],
-            brand=c["brand"] or "Unknown",
-            variant=classify_variant(name),
-            sugar_class=classify_sugar(name),
+            brand=c["brand"] or b.get("family", "Unknown"),
+            variant=classify_variant(name, b),
+            sugar_class=classify_sugar(name, b),
             pack=c["pack"] or "Unknown",
             container=classify_container(name, c["pack"]),
             title=name, base_price=c["base_price"],
@@ -247,6 +280,7 @@ def scrape(config: dict) -> list[PriceRecord]:
     cap = int(comp["max_skus_per_run"])
     records: list[PriceRecord] = []
     seen: set[str] = set()
+    dropped: dict[str, int] = {}
 
     with cffi_requests.Session(impersonate=IMPERSONATE_PROFILE, timeout=30) as client:
         for qi, q in enumerate(queries):
@@ -265,10 +299,14 @@ def scrape(config: dict) -> list[PriceRecord]:
             except Exception as exc:  # noqa: BLE001
                 records.append(_blank(config, now, q, url, f"PARSE_ERROR:{type(exc).__name__}"))
                 continue
-            records.extend(build_records(cards, config, q, now, url, seen, cap - ok_so_far))
+            records.extend(build_records(cards, config, q, now, url, seen, cap - ok_so_far, dropped))
             if qi < len(queries) - 1:
                 time.sleep(random.uniform(delay_lo, delay_hi))
 
+    if dropped:
+        top = sorted(dropped.items(), key=lambda kv: -kv[1])[:15]
+        print("Brand labels dropped by the brand filter: "
+              + ", ".join(f"{k} ({v})" for k, v in top))
     return records
 
 
