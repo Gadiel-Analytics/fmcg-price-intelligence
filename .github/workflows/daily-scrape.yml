@@ -1,7 +1,8 @@
 name: Daily Price Scrape
 
-# Orchestration layer (M3). Runs once daily on GitHub's hosted runner,
-# which has open network egress — so it can reach tesco.ie directly.
+# Orchestration: runs once daily on GitHub's hosted runner. Tests gate the run;
+# the quality gate in run.py refuses partial scrapes; only then is the data
+# committed back to the repository (the commit history is the audit trail).
 on:
   schedule:
     - cron: "0 8 * * *"     # 08:00 UTC every day
@@ -28,9 +29,12 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements-dev.txt
 
-      - name: Run daily scrape + ingest + cube export
+      - name: Run tests (offline)
+        run: python -m pytest -q
+
+      - name: Scrape, quality gate, ingest, export cube
         run: python run.py
 
       - name: Commit updated data

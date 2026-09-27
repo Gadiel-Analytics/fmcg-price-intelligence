@@ -4,6 +4,7 @@ __pycache__/
 .venv/
 venv/
 .env
+.pytest_cache/
 
 # DuckDB scratch (the Parquet fact table IS committed; local db files are not)
 *.duckdb

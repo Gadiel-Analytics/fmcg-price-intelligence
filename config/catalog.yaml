@@ -2,11 +2,12 @@
 # Catalog — Coca-Cola CSD portfolio @ SuperValu Ireland
 # =============================================================================
 # Search-query driven: the scraper runs each query against SuperValu's search,
-# extracts every product card, and keeps those matching brand_filter.
-# Add coverage by adding a search term — no product IDs to maintain.
+# extracts every product card, and keeps those matching a configured brand.
+# Add coverage by adding a search term or a brand — no product IDs to maintain.
 #
 # sugar_class / variant / container are inferred from the product name in code
-# (see classify_* in scraper.py), which powers the Sugar-Tax spread.
+# (see classify_* in scrapers/scraper.py); flavour and caffeine flags are derived
+# from the title in sql/01_observations.sql, so they apply to the full history.
 # =============================================================================
 
 retailer:
@@ -17,17 +18,42 @@ retailer:
   currency: "EUR"
   market: "IE"
 
-# Search terms to sweep. Each returns many cards; brand_filter trims to Coca-Cola.
+# Search terms to sweep. Each returns many cards; `brands` trims to the portfolio.
 search_queries:
   - "coca cola"
   - "coca cola zero"
   - "diet coke"
 
-# Keep only these brands (case-insensitive). Empty list = keep everything.
-brand_filter:
-  - "Coca-Cola"
+# Brands to keep. A card is kept when its brand label (or, if the card has no
+# brand label, its title) contains one of the `match` terms (case-insensitive,
+# hyphens ignored). `manufacturer` is carried for competitive analysis.
+brands:
+  - name: "Coca-Cola"
+    manufacturer: "The Coca-Cola Company"
+    match: ["coca cola", "diet coke", "coke"]
+
+# Titles containing any of these terms are dropped even if the brand matches
+# (e.g. spirit-and-cola ready-to-drink cans that carry the Coca-Cola name).
+exclude_title_terms: ["whiskey", "rum", "vodka", "jack daniel"]
+
+analysis:
+  # A SKU counts as "active" if it was observed within this many days of the
+  # latest run. Keeps transient gaps from dropping SKUs, and keeps delisted
+  # SKUs out of the current-price views.
+  active_window_days: 2
+  # Sugar Sweetened Drinks Tax, top band (>= 8 g sugar / 100 ml): EUR 24.39/hl
+  # ex-VAT (Revenue.ie), i.e. EUR 0.2439/L; x 1.23 VAT = EUR 0.30/L at shelf.
+  # Used as a benchmark for the full-sugar vs Zero spread — not as proof of
+  # pass-through (the spread also reflects commercial choices).
+  levy_per_litre_incl_vat: 0.30
+  levy_source: "https://www.revenue.ie/en/companies-and-charities/excise-and-licences/sugar-sweetened-drinks-tax/rate-of-tax.aspx"
+
+quality:
+  # Refuse to ingest a run whose SKU count falls below this share of the
+  # trailing 7-day median (protects the history from partial or broken scrapes).
+  min_share_of_recent_median: 0.5
 
 compliance:
   request_delay_seconds: [3, 7]
-  max_skus_per_run: 60
-  user_agent: "GadielAnalytics-PriceIntel/0.1 (portfolio research; +github.com/Gadx1)"
+  max_skus_per_run: 60          # hard cap across all queries in one run
+  user_agent: "GadielAnalytics-PriceIntel/0.2 (portfolio research; +github.com/Gadiel-Analytics)"

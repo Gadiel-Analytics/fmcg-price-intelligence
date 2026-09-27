@@ -1,0 +1,41 @@
+<!--
+  SYNTHETIC fixture. It reproduces the card structure the parser relies on
+  (data-testid="ProductCardWrapper-<sku>", aria-hidden title <p>,
+  ProductCardAQABrand, promotionBadge-*), with prices taken from the history.
+  It is NOT a saved SuperValu page. Replace it with a real capture via
+  `python run.py --capture-fixture` and point DRY_RUN_FIXTURE at the new file.
+-->
+<html><body>
+<div data-testid="ProductCardWrapper-1009117003">
+  <a href="/sm/delivery/rsid/5550/product/coca-cola-bottle-2-l-id-1009117003">
+    <p aria-hidden="true">Coca-Cola Bottle (2 L), €4.20</p></a>
+  <span data-testid="ProductCardAQABrand">Coca-Cola</span>
+  <div data-testid="promotionBadge-a1" title="2 for €6.50"></div>
+</div>
+<div data-testid="ProductCardWrapper-1009004003">
+  <a href="/sm/delivery/rsid/5550/product/coca-cola-zero-sugar-bottle-2-l-id-1009004003">
+    <p aria-hidden="true">Coca-Cola Zero Sugar Bottle (2 L), €3.40</p></a>
+  <span data-testid="ProductCardAQABrand">Coca-Cola</span>
+  <div data-testid="promotionBadge-a2" title="3 for €6.75"></div>
+</div>
+<div data-testid="ProductCardWrapper-1023933011">
+  <a href="/sm/delivery/rsid/5550/product/coca-cola-original-cans-8-pack-id-1023933011">
+    <p aria-hidden="true">Coca-Cola Original Cans 8 Pack (330 ml), €8.50</p></a>
+  <span data-testid="ProductCardAQABrand">Coca-Cola</span>
+</div>
+<div data-testid="ProductCardWrapper-9000000001">
+  <a href="/sm/delivery/rsid/5550/product/diet-coke-can-330-ml-id-9000000001">
+    <p aria-hidden="true">Diet Coke Can (330 ml), €1.55</p></a>
+  <span data-testid="ProductCardAQABrand">Diet Coke</span>
+</div>
+<div data-testid="ProductCardWrapper-9000000002">
+  <a href="/sm/delivery/rsid/5550/product/jack-daniels-coca-cola-can-id-9000000002">
+    <p aria-hidden="true">Jack Daniel's Whiskey &amp; Coca-Cola Can (330 ml), €3.50</p></a>
+  <span data-testid="ProductCardAQABrand">Jack Daniel's</span>
+</div>
+<div data-testid="ProductCardWrapper-9000000003">
+  <a href="/sm/delivery/rsid/5550/product/pepsi-max-bottle-2-l-id-9000000003">
+    <p aria-hidden="true">Pepsi Max Bottle (2 L), €3.00</p></a>
+  <span data-testid="ProductCardAQABrand">Pepsi</span>
+</div>
+</body></html>

@@ -1,6 +1,6 @@
 """
-FMCG Price Intelligence — Scraper Core (M1) · SuperValu Ireland
-===============================================================
+FMCG Price Intelligence — Scraper Core · SuperValu Ireland
+==========================================================
 Fetches public search-results pages from SuperValu (shop.supervalu.ie) and
 extracts RGM-relevant price signals from each product card, with normalised
 price-per-litre so the Sugar-Tax spread compares like-for-like.
@@ -14,9 +14,13 @@ Design:
 - curl_cffi Chrome impersonation (TLS/JA3).
 - Card parsing keyed on stable `data-testid` attributes.
 - Pack-aware normalisation: detects multipacks (Twin Pack, N Pack), computes total
-  litres and €/litre so multipacks and singles are comparable.
-- Flavour + caffeine flags keep Cherry/Vanilla out of the core spread.
-- Search-query driven; compliance-by-design (human-rate delays, honest UA, cap).
+  litres and EUR/litre so multipacks and singles are comparable.
+- Brand matching from config (brand label first, title as fallback).
+- Search-query driven; compliance-by-design (human-rate delays, honest UA,
+  per-run SKU cap, provenance incl. the originating search query).
+
+Raw promotion text is stored as-is; it is parsed into mechanics in SQL
+(sql/01_observations.sql) so the whole history benefits from parser changes.
 """
 
 from __future__ import annotations
@@ -28,10 +32,10 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import quote
 
 import yaml
 from bs4 import BeautifulSoup
-from curl_cffi import requests as cffi_requests
 
 CONFIG_PATH = Path(__file__).resolve().parent.parent / "config" / "catalog.yaml"
 IMPERSONATE_PROFILE = "chrome"
@@ -45,7 +49,7 @@ SIZE_RE = re.compile(r"([\d.]+)\s*(ml|l)\b", re.IGNORECASE)
 
 @dataclass
 class PriceRecord:
-    """One scraped observation — a row in the fact table / data cube."""
+    """One scraped observation — a row in the fact table."""
     scraped_at: str
     retailer: str
     market: str
@@ -57,18 +61,18 @@ class PriceRecord:
     pack: str               # the unit size as shown, e.g. "330 ml"
     container: str
     title: str | None
-    base_price: float | None
-    unit_price: float | None       # NORMALISED €/litre (total pack)
+    base_price: float | None       # the price shown on the card (may be a promo price)
+    unit_price: float | None       # base_price normalised to EUR/litre (total pack)
     unit_price_basis: str | None   # "litre"
-    clubcard_price_text: str | None
+    clubcard_price_text: str | None  # raw promotion badge text (legacy column name)
     deposit: float | None
     sugar_g_per_serving: float | None
     source_url: str
     status: str
-    # extra dimensions for richer RGM analysis
     pack_count: int = 1
     total_litres: float | None = None
     is_flavoured: bool = False
+    search_query: str | None = None
 
 
 def load_config(path: Path = CONFIG_PATH) -> dict:
@@ -78,9 +82,13 @@ def load_config(path: Path = CONFIG_PATH) -> dict:
 
 # --- Classification ----------------------------------------------------------
 
+def _norm(text: str | None) -> str:
+    return re.sub(r"[-\s]+", " ", (text or "").lower()).strip()
+
+
 def classify_sugar(name: str) -> str:
     n = name.lower()
-    if "zero" in n or "no sugar" in n:
+    if "zero sugar" in n or "no sugar" in n or re.search(r"\bzero\b(?!\s+caffeine)", n):
         return "zero"
     if "diet" in n or "light" in n:
         return "diet"
@@ -94,7 +102,7 @@ def classify_variant(name: str) -> str:
         return "Cherry"
     if "vanilla" in n:
         return "Vanilla"
-    if "zero" in n:
+    if classify_sugar(name) == "zero":
         return "Zero Sugar"
     if "diet" in n:
         return "Diet Coke"
@@ -108,7 +116,7 @@ def is_flavoured(name: str) -> bool:
 
 def classify_container(name: str, pack: str | None) -> str:
     blob = f"{name} {pack or ''}".lower()
-    if "can" in blob:
+    if re.search(r"\bcans?\b", blob):
         return "Can"
     if "glass" in blob:
         return "Glass"
@@ -140,6 +148,18 @@ def price_per_litre(name: str, price: float | None) -> float | None:
     return round(price / tl, 2) if (tl and price) else None
 
 
+def brand_matches(card_brand: str | None, title: str, config: dict) -> bool:
+    """Brand label decides when present; the title is only a fallback."""
+    excluded = [_norm(t) for t in config.get("exclude_title_terms", [])]
+    if any(t in _norm(title) for t in excluded):
+        return False
+    brands = config.get("brands") or []
+    if not brands:
+        return True
+    target = _norm(card_brand) if card_brand else _norm(title)
+    return any(_norm(term) in target for b in brands for term in b.get("match", []))
+
+
 # --- Card parsing ------------------------------------------------------------
 
 def parse_cards(html: str) -> list[dict]:
@@ -167,84 +187,118 @@ def parse_cards(html: str) -> list[dict]:
     return cards
 
 
+def build_records(cards: list[dict], config: dict, query: str, now: str,
+                  page_url: str, seen: set[str], budget: int) -> list[PriceRecord]:
+    """Turn parsed cards into records. `budget` = SKUs still allowed this run."""
+    retailer = config["retailer"]
+    out: list[PriceRecord] = []
+    for c in cards:
+        if len(out) >= budget:
+            break
+        if c["sku"] in seen or c["base_price"] is None:
+            continue
+        if not brand_matches(c["brand"], c["name"], config):
+            continue
+        seen.add(c["sku"])
+        name = c["name"]
+        out.append(PriceRecord(
+            scraped_at=now, retailer=retailer["code"], market=retailer["market"],
+            currency=retailer["currency"], product_id=c["sku"],
+            brand=c["brand"] or "Unknown",
+            variant=classify_variant(name),
+            sugar_class=classify_sugar(name),
+            pack=c["pack"] or "Unknown",
+            container=classify_container(name, c["pack"]),
+            title=name, base_price=c["base_price"],
+            unit_price=price_per_litre(name, c["base_price"]),
+            unit_price_basis="litre",
+            clubcard_price_text=c["promo"], deposit=None,
+            sugar_g_per_serving=None,
+            source_url=c["url"] or page_url, status="OK",
+            pack_count=pack_count(name),
+            total_litres=total_litres(name),
+            is_flavoured=is_flavoured(name),
+            search_query=query,
+        ))
+    return out
+
+
 # --- Scrape orchestration ----------------------------------------------------
 
-def scrape(config: dict) -> list[PriceRecord]:
-    retailer = config["retailer"]
-    comp = config["compliance"]
-    queries = config["search_queries"]
-    brand_filter = [b.lower() for b in config.get("brand_filter", [])]
+def search_url(config: dict, query: str) -> str:
+    r = config["retailer"]
+    return r["search_url"].format(rsid=r["rsid"], query=quote(query))
 
-    delay_lo, delay_hi = comp["request_delay_seconds"]
-    headers = {
-        "User-Agent": comp["user_agent"],
+
+def request_headers(config: dict) -> dict:
+    return {
+        "User-Agent": config["compliance"]["user_agent"],
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "en-IE,en;q=0.9",
     }
+
+
+def scrape(config: dict) -> list[PriceRecord]:
+    from curl_cffi import requests as cffi_requests  # network-only dependency
+
+    comp = config["compliance"]
+    queries = config["search_queries"]
+    delay_lo, delay_hi = comp["request_delay_seconds"]
+    cap = int(comp["max_skus_per_run"])
     records: list[PriceRecord] = []
     seen: set[str] = set()
 
     with cffi_requests.Session(impersonate=IMPERSONATE_PROFILE, timeout=30) as client:
         for qi, q in enumerate(queries):
-            url = retailer["search_url"].format(rsid=retailer["rsid"], query=q.replace(" ", "%20"))
+            url = search_url(config, q)
             now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+            ok_so_far = sum(1 for r in records if r.status == "OK")
+            if ok_so_far >= cap:
+                print(f"Per-run SKU cap ({cap}) reached; skipping remaining queries.")
+                break
             try:
-                resp = client.get(url, headers=headers)
+                resp = client.get(url, headers=request_headers(config))
                 if resp.status_code != 200:
-                    records.append(_blank(retailer, now, q, url, f"HTTP_{resp.status_code}"))
+                    records.append(_blank(config, now, q, url, f"HTTP_{resp.status_code}"))
                     continue
                 cards = parse_cards(resp.text)
             except Exception as exc:  # noqa: BLE001
-                records.append(_blank(retailer, now, q, url, f"PARSE_ERROR:{type(exc).__name__}"))
+                records.append(_blank(config, now, q, url, f"PARSE_ERROR:{type(exc).__name__}"))
                 continue
-
-            kept = 0
-            for c in cards:
-                if c["sku"] in seen:
-                    continue
-                if brand_filter and (c["brand"] or "").lower() not in brand_filter:
-                    continue
-                if c["base_price"] is None:
-                    continue
-                seen.add(c["sku"])
-                kept += 1
-                if kept > comp["max_skus_per_run"]:
-                    break
-                name = c["name"]
-                records.append(PriceRecord(
-                    scraped_at=now, retailer=retailer["code"], market=retailer["market"],
-                    currency=retailer["currency"], product_id=c["sku"],
-                    brand=c["brand"] or "Unknown",
-                    variant=classify_variant(name),
-                    sugar_class=classify_sugar(name),
-                    pack=c["pack"] or "Unknown",
-                    container=classify_container(name, c["pack"]),
-                    title=name, base_price=c["base_price"],
-                    unit_price=price_per_litre(name, c["base_price"]),
-                    unit_price_basis="litre",
-                    clubcard_price_text=c["promo"], deposit=None,
-                    sugar_g_per_serving=None,
-                    source_url=c["url"] or url, status="OK",
-                    pack_count=pack_count(name),
-                    total_litres=total_litres(name),
-                    is_flavoured=is_flavoured(name),
-                ))
-
+            records.extend(build_records(cards, config, q, now, url, seen, cap - ok_so_far))
             if qi < len(queries) - 1:
                 time.sleep(random.uniform(delay_lo, delay_hi))
 
     return records
 
 
-def _blank(retailer, now, query, url, status) -> PriceRecord:
+def fetch_html(config: dict, query: str) -> str:
+    """Single live fetch — used to capture a real parser fixture."""
+    from curl_cffi import requests as cffi_requests
+    with cffi_requests.Session(impersonate=IMPERSONATE_PROFILE, timeout=30) as client:
+        resp = client.get(search_url(config, query), headers=request_headers(config))
+        resp.raise_for_status()
+        return resp.text
+
+
+def _blank(config, now, query, url, status) -> PriceRecord:
+    retailer = config["retailer"]
     return PriceRecord(
         scraped_at=now, retailer=retailer["code"], market=retailer["market"],
         currency=retailer["currency"], product_id=f"query:{query}", brand="-",
         variant="-", sugar_class="-", pack="-", container="-", title=None,
         base_price=None, unit_price=None, unit_price_basis=None,
         clubcard_price_text=None, deposit=None, sugar_g_per_serving=None,
-        source_url=url, status=status,
+        source_url=url, status=status, search_query=query,
     )
+
+
+def print_records(records: list[PriceRecord]) -> None:
+    ok = [x for x in records if x.status == "OK"]
+    for r in sorted(ok, key=lambda x: (x.sugar_class, x.unit_price or 0)):
+        flav = " [flavoured]" if r.is_flavoured else ""
+        print(f"  [{r.sugar_class:>4}] {r.variant:>10} x{r.pack_count:>2} {r.pack:>7} "
+              f"EUR{r.base_price:>6} = EUR{r.unit_price}/L{flav}  promo={r.clubcard_price_text}")
 
 
 def main() -> int:
@@ -252,10 +306,7 @@ def main() -> int:
     records = scrape(config)
     ok = sum(1 for r in records if r.status == "OK")
     print(f"Scraped {len(records)} rows — {ok} OK")
-    for r in sorted([x for x in records if x.status == "OK"], key=lambda x: (x.sugar_class, x.unit_price or 0)):
-        flav = " [flavoured]" if r.is_flavoured else ""
-        print(f"  [{r.sugar_class:>4}] {r.variant:>10} x{r.pack_count:>2} {r.pack:>7} "
-              f"EUR{r.base_price:>6} = EUR{r.unit_price}/L{flav}  promo={r.clubcard_price_text}")
+    print_records(records)
     return 0 if ok > 0 else 1
 
 

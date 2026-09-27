@@ -10,7 +10,7 @@
 | **Data type** | Public product attributes & shelf prices only | Factual, non-personal — lowest legal-risk category |
 | **Personal data** | None collected | Keeps project fully outside GDPR subject-data scope |
 | **Source** | `shop.supervalu.ie` public search-results pages | Publicly accessible without authentication |
-| **Volume** | ~28 SKUs, once daily | Traffic indistinguishable from a single human shopper |
+| **Volume** | 3 search pages, ~25–35 SKUs, once daily | Traffic indistinguishable from a single human shopper |
 | **Purpose** | Price-monitoring / market research / portfolio demonstration | Recognised legitimate-interest use case |
 
 ## Operating principles
@@ -18,10 +18,13 @@
 1. **Human-rate access** — sequential requests, randomised 3–7s delay, daily cadence only.
 2. **Identify honestly** — descriptive User-Agent with project contact.
 3. **No authentication bypass** — only publicly rendered, non-logged-in search results.
-4. **Hard result cap** — `max_skus_per_run` ceiling enforced in code; the run refuses to exceed it.
-5. **Provenance logged** — every row records source domain, search query, source URL and UTC timestamp.
+4. **Hard result cap** — `max_skus_per_run` is enforced across all queries in a run; once reached, remaining queries are skipped.
+5. **Provenance logged** — every row records retailer, originating search query, source URL and UTC timestamp
+   (recorded from the F0 release onwards; earlier rows predate the field).
 6. **No redistribution of copyrighted descriptive text** — we retain numeric/price facts and
    structured attributes (pack, container, sugar class) for analysis, not the retailer's prose copy.
+7. **Quality gate** — a run whose SKU count falls below half of the trailing 7-day median is not ingested,
+   so partial or broken pages never enter the history.
 
 ## On TLS impersonation
 
@@ -45,4 +48,4 @@ Public, non-personal, factual price data collected at human rate for market-rese
 the lowest-risk band under both EU and US frameworks. This is a non-commercial, personal portfolio
 project. This document is a good-faith compliance statement and does not constitute legal advice.
 
-_Last reviewed: 2026-06-04_
+_Last reviewed: 2026-09-26_

@@ -45,129 +45,177 @@
   .contact{display:inline-block;margin-top:4px}
   .contact a{margin-right:2px}
   .empty{padding:32px;text-align:center;color:var(--muted);font-style:italic}
+
+  .note{font-size:12px;color:var(--muted);margin-top:14px;max-width:72ch}
+  .tag{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 6px;border:1px solid var(--line);border-radius:3px;margin:0 4px 2px 0;color:var(--muted)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+  .mini h4{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:var(--ink);margin-bottom:4px}
+  .table-wrap{overflow-x:auto}
+  td.muted{color:var(--muted)}
+  .levy-hi{color:var(--accent);font-weight:600}
+  .levy-lo{color:var(--accent2);font-weight:600}
 </style>
 </head>
 <body>
 <div class="container">
-  <div class="eyebrow">Gadiel Analytics · RGM Price Intelligence</div>
-  <h1>Coca-Cola price-pack architecture at SuperValu Ireland</h1>
-  <p class="standfirst">A daily, automated read of carbonated soft-drink shelf prices — quantifying the Sugar-Sweetened Drinks Tax spread on a like-for-like price-per-litre basis across the Coca-Cola portfolio.</p>
-  <p class="meta" id="meta">Loading data…</p>
+<div class="eyebrow">Gadiel Analytics · RGM Price Intelligence</div>
+<h1>Coca-Cola price-pack architecture at SuperValu Ireland</h1>
+<p class="standfirst">A daily, automated read of Coca-Cola shelf prices, separating regular prices from promotions and benchmarking the full-sugar premium against Ireland's Sugar-Sweetened Drinks Tax on a like-for-like price-per-litre basis.</p>
+<p class="meta" id="meta">Loading data…</p>
 
-  <div class="kpis" id="kpis"></div>
-  <div class="rule"></div>
+<div class="kpis" id="kpis"></div>
+<div class="rule"></div>
 
-  <div class="section-title">Sugar-Tax spread</div>
-  <p class="section-note">Normalised price per litre of full-sugar Coca-Cola (subject to the levy) versus Zero Sugar (exempt), matched by format and pack count, flavoured variants excluded. A positive spread is the visible pass-through of Ireland's sugar tax onto full-sugar price-packs.</p>
-  <div class="panel"><div id="spread"></div></div>
-  <div class="rule"></div>
+<div class="section-title">Sugar-tax spread</div>
+<p class="section-note">Regular price per litre of full-sugar Coca-Cola versus Zero Sugar, matched by pack size, pack count and container, for SKUs listed today. Flavoured and caffeine-free variants are excluded. The levy column compares the premium with the tax on full-sugar drinks (<span id="levy-note">€0.30</span> per litre including VAT).</p>
+<div class="panel"><div class="table-wrap" id="spread"></div>
+<p class="note">A premium above the levy does not show that the tax is over-passed to shoppers, and one below it does not show absorption: the gap also reflects pricing choices for each pack. Read the ratio as a benchmark, not a measured pass-through.</p></div>
+<div class="rule"></div>
 
-  <div class="section-title">Price-per-litre by format</div>
-  <p class="section-note">How unit economics change with pack size — the core of price-pack architecture. Larger packs drive down €/litre (the classic volume incentive).</p>
-  <div class="panel"><div id="ppl"></div><div class="legend" id="ppl-legend"></div></div>
-  <div class="rule"></div>
+<div class="section-title">Price per litre by format</div>
+<p class="section-note">Regular shelf price per litre for every SKU listed today. Larger packs lower the cost per litre — the core of price-pack architecture.</p>
+<div class="panel"><div id="ppl"></div><div class="legend" id="ppl-legend"></div></div>
+<div class="rule"></div>
 
-  <div class="section-title">Base-price trend</div>
-  <p class="section-note">Daily shelf price by SKU. Populates as the daily scrape accumulates history.</p>
-  <div class="panel"><div id="trend"></div><div class="legend" id="trend-legend"></div></div>
+<div class="section-title">Promotions</div>
+<p class="section-note">How often each SKU carried a promotion over the full history, which mechanics were used, and how deep the cut was against the regular price. Multibuy cuts are measured on the per-unit price when the offer is taken.</p>
+<div class="panel"><div class="table-wrap" id="promos"></div></div>
+<div class="rule"></div>
 
-  <footer>
-    Source: shop.supervalu.ie public search results · collected daily at human rate via Chrome-impersonated client · prices &amp; product attributes only (no personal data).<br/>
-    Compliance-by-design — see COMPLIANCE.md<br/>
-    <span class="contact">
-      <a href="https://gadielanalytics.com/">gadielanalytics.com</a> ·
-      <a href="https://x.com/GadielAnalytics">@GadielAnalytics</a> ·
-      <a href="mailto:hello@gadielanalytics.com">hello@gadielanalytics.com</a> ·
-      <a href="https://github.com/Gadiel-Analytics">github.com/Gadiel-Analytics</a>
-    </span><br/>
-    <span id="provenance"></span>
-  </footer>
+<div class="section-title">Price per litre over time</div>
+<p class="section-note">Daily price per litre after promotions, one panel per matched format. Dashed lines show the regular price; where the solid line dips below it, a promotion was running.</p>
+<div class="panel"><div class="grid" id="trend"></div><div class="legend" id="trend-legend"></div></div>
+
+<footer>
+Source: shop.supervalu.ie public search results · collected daily at human rate via Chrome-impersonated client · prices &amp; product attributes only (no personal data).<br/>
+Regular prices on promotion days are carried forward from the latest non-promotional observation. Compliance-by-design — see COMPLIANCE.md<br/>
+<span class="contact">
+<a href="https://gadielanalytics.com/">gadielanalytics.com</a> ·
+<a href="https://x.com/GadielAnalytics">@GadielAnalytics</a> ·
+<a href="mailto:hello@gadielanalytics.com">hello@gadielanalytics.com</a> ·
+<a href="https://github.com/Gadiel-Analytics">github.com/Gadiel-Analytics</a>
+</span><br/>
+<span id="provenance"></span>
+</footer>
 </div>
 
 <script>
-const palette=["#c8102e","#1d6f6f","#b5830f","#3a4a8c","#7a5c3e"];
+const C={full:"#c8102e",zero:"#1d6f6f",diet:"#b5830f"};
+const SUGAR={full:"Original",zero:"Zero Sugar",diet:"Diet Coke"};
+const MECH={multibuy:"Multibuy",price_cut:"Price cut",loyalty_price:"Rewards price",badge:"Value badge"};
+const eur=v=>v==null?"—":"€"+v.toFixed(2);
+const pct=v=>v==null?"—":(v*100).toFixed(0)+"%";
+const fmtDate=s=>s?new Date(s+"T00:00:00Z").toLocaleDateString("en-IE",{day:"numeric",month:"short",year:"numeric",timeZone:"UTC"}):"—";
+const fmtPack=r=>`${r.pack_count>1?r.pack_count+"× ":""}${r.pack} ${r.container}`;
+
 async function load(){
   let cube;
-  try{ cube=await (await fetch("cube.json")).json(); }
-  catch(e){ document.getElementById("meta").textContent="cube.json not found — run `python3 run.py`."; return; }
-  renderMeta(cube); renderKPIs(cube); renderSpread(cube.sugar_tax_spread||[]);
-  renderPPL(cube.latest||[]); renderTrend(cube.trend||[]);
+  try{ cube=await (await fetch("cube.json",{cache:"no-store"})).json(); }
+  catch(e){ document.getElementById("meta").textContent="cube.json could not be loaded. Run `python run.py --export-only` to rebuild it."; return; }
+  if((cube.schema_version||1)<2){
+    document.getElementById("meta").textContent="This data file predates the current dashboard. It is rebuilt on the next daily run.";
+    return;
+  }
+  renderMeta(cube); renderKPIs(cube); renderSpread(cube); renderPPL(cube.latest||[]);
+  renderPromos(cube.promo_summary||[]); renderTrend(cube);
 }
+
 function renderMeta(c){
-  const l=c.latest||[]; const ts=l.length?l[0].scraped_at:null;
-  document.getElementById("meta").textContent=`SuperValu Ireland · ${l.length} SKUs tracked · last updated ${ts?ts.slice(0,10):"—"}`;
-  document.getElementById("provenance").textContent=`Last observation: ${ts||"n/a"} (UTC)`;
+  document.getElementById("meta").textContent=
+    `Daily prices since ${fmtDate(c.first_run_date)} (${c.days_of_history} days). Last run ${fmtDate(c.last_run_date)}; ${c.kpis.active_skus} SKUs listed today.`;
+  document.getElementById("provenance").textContent=`Data file generated ${c.generated_at} (UTC).`;
+  document.getElementById("levy-note").textContent=eur(c.levy.per_litre_incl_vat);
 }
+
 function renderKPIs(c){
-  const l=c.latest||[], s=c.sugar_tax_spread||[];
-  const pos=s.filter(r=>r.spread_pct>0);
-  const avg=pos.length?(pos.reduce((a,r)=>a+r.spread_pct,0)/pos.length).toFixed(1)+"%":"—";
-  const mx=s.length?Math.max(...s.map(r=>r.spread_pct)):0;
-  const promos=l.filter(r=>r.clubcard_price_text).length;
-  const k=[
-    {l:"SKUs tracked",v:l.length,s:"Coca-Cola CSD portfolio"},
-    {l:"Avg sugar-tax spread",v:avg,s:"full vs zero, €/litre, where +"},
-    {l:"Max spread",v:mx?("+"+mx.toFixed(1)+"%"):"—",s:"widest format gap"},
-    {l:"Formats compared",v:s.length,s:"like-for-like pairs"},
+  const k=c.kpis, s=c.sugar_tax_spread||[];
+  const top=s.slice().sort((a,b)=>b.spread_pct-a.spread_pct)[0];
+  const x=v=>v==null?"—":v.toFixed(2)+"×";
+  const cards=[
+    {l:"Premium vs levy",v:`${x(k.levy_ratio_min)}–${x(k.levy_ratio_max)}`,s:`range across ${k.formats_compared} matched formats`},
+    {l:"Widest premium",v:top?`+${top.spread_pct.toFixed(1)}%`:"—",s:top?`${fmtPack(top)}, full sugar over Zero`:""},
+    {l:"On promotion",v:pct(k.promo_share_sku_days),s:"of SKU-days in the history"},
+    {l:"SKUs listed",v:k.active_skus,s:"Coca-Cola, all sugar classes"},
   ];
-  document.getElementById("kpis").innerHTML=k.map(x=>`<div class="kpi"><div class="kpi-label">${x.l}</div><div class="kpi-value">${x.v}</div><div class="kpi-sub">${x.s}</div></div>`).join("");
+  document.getElementById("kpis").innerHTML=cards.map(x=>`<div class="kpi"><div class="kpi-label">${x.l}</div><div class="kpi-value">${x.v}</div><div class="kpi-sub">${x.s}</div></div>`).join("");
 }
-function fmtPack(r){ return `${r.pack_count>1?r.pack_count+"× ":""}${r.pack} ${r.container}`; }
-function renderSpread(rows){
-  const el=document.getElementById("spread");
-  if(!rows.length){el.innerHTML='<div class="empty">No paired full vs zero data yet.</div>';return;}
-  rows.sort((a,b)=>b.spread_pct-a.spread_pct);
-  const maxAbs=Math.max(...rows.map(r=>Math.abs(r.spread_pct)),1);
-  el.innerHTML=`<table><thead><tr>
-    <th>Format</th><th class="num">Original €/L</th><th class="num">Zero €/L</th>
-    <th class="num">Spread €/L</th><th class="num">Spread %</th></tr></thead><tbody>
-    ${rows.map(r=>{
-      const cls=r.spread_pct>0.05?"spread-pos":"spread-zero";
-      const w=Math.abs(r.spread_pct)/maxAbs*120;
-      return `<tr><td>${fmtPack(r)}</td>
-        <td class="num">${r.full_per_litre.toFixed(2)}</td>
-        <td class="num">${r.zero_per_litre.toFixed(2)}</td>
-        <td class="num">${r.spread_per_litre>0?"+":""}${r.spread_per_litre.toFixed(2)}</td>
-        <td class="num bar-cell ${cls}"><span class="bar" style="width:${w}px"></span>${r.spread_pct>0?"+":""}${r.spread_pct.toFixed(1)}%</td></tr>`;
-    }).join("")}</tbody></table>`;
+
+function renderSpread(c){
+  const el=document.getElementById("spread"), rows=(c.sugar_tax_spread||[]).slice();
+  if(!rows.length){el.innerHTML='<div class="empty">No matched full-sugar and Zero pairs are listed today.</div>';return;}
+  rows.sort((a,b)=>b.levy_ratio-a.levy_ratio);
+  const maxR=Math.max(...rows.map(r=>r.levy_ratio),1);
+  el.innerHTML=`<table><thead><tr><th>Format</th><th class="num">Original €/L</th><th class="num">Zero €/L</th>
+  <th class="num">Premium €/L</th><th class="num">Premium %</th><th class="num">× levy</th><th class="num">Premium after promos</th></tr></thead><tbody>
+  ${rows.map(r=>{
+    const cls=r.levy_ratio>=1?"levy-hi":"levy-lo", w=r.levy_ratio/maxR*90;
+    const eff=r.any_promo?`${r.spread_effective_per_litre>0?"+":""}${r.spread_effective_per_litre.toFixed(2)}`:'<span class="muted">no promo</span>';
+    return `<tr><td>${fmtPack(r)}</td><td class="num">${r.full_per_litre.toFixed(2)}</td><td class="num">${r.zero_per_litre.toFixed(2)}</td>
+    <td class="num">+${r.spread_per_litre.toFixed(2)}</td><td class="num">+${r.spread_pct.toFixed(1)}%</td>
+    <td class="num bar-cell ${cls}"><span class="bar" style="width:${w}px"></span>${r.levy_ratio.toFixed(2)}×</td>
+    <td class="num">${eff}</td></tr>`;}).join("")}</tbody></table>`;
 }
+
 function renderPPL(rows){
   const el=document.getElementById("ppl");
-  const data=rows.filter(r=>!r.is_flavoured&&r.unit_price!=null&&(r.sugar_class==="full"||r.sugar_class==="zero"));
-  if(!data.length){el.innerHTML='<div class="empty">No data.</div>';return;}
-  data.sort((a,b)=>b.total_litres-a.total_litres);
-  const W=el.clientWidth||980,bar=26,H=data.length*bar+40,M={t:10,r:60,b:24,l:160};
-  const x=d3.scaleLinear().domain([0,d3.max(data,d=>d.unit_price)*1.1]).range([M.l,W-M.r]);
-  const svg=d3.select(el).append("svg").attr("viewBox",`0 0 ${W} ${H}`).attr("width","100%");
+  const data=rows.filter(r=>r.is_core&&r.regular_ppl!=null);
+  if(!data.length){el.innerHTML='<div class="empty">No listed SKUs with a regular price yet.</div>';return;}
+  data.sort((a,b)=>b.total_litres-a.total_litres||a.sugar_class.localeCompare(b.sugar_class));
+  const W=el.clientWidth||980,bar=26,H=data.length*bar+40,M={t:10,r:60,b:24,l:200};
+  const x=d3.scaleLinear().domain([0,d3.max(data,d=>d.regular_ppl)*1.1]).range([M.l,W-M.r]);
+  const svg=d3.select(el).append("svg").attr("viewBox",`0 0 ${W} ${H}`).attr("width","100%").attr("role","img")
+    .attr("aria-label","Regular price per litre by SKU");
   svg.append("g").attr("class","chart-axis").attr("transform",`translate(0,${H-M.b})`).call(d3.axisBottom(x).ticks(6).tickFormat(d=>"€"+d.toFixed(2)));
   data.forEach((d,i)=>{
     const y=M.t+i*bar;
-    const c=d.sugar_class==="zero"?palette[1]:palette[0];
-    svg.append("rect").attr("x",M.l).attr("y",y).attr("width",x(d.unit_price)-M.l).attr("height",bar-8).attr("fill",c).attr("opacity",.85).attr("rx",2);
-    svg.append("text").attr("x",M.l-8).attr("y",y+(bar-8)/2).attr("dy",".35em").attr("text-anchor","end").style("font-family","'IBM Plex Mono',monospace").style("font-size","10px").style("fill","var(--ink)").text(`${d.variant} ${d.pack_count>1?d.pack_count+"×":""}${d.pack}`);
-    svg.append("text").attr("x",x(d.unit_price)+6).attr("y",y+(bar-8)/2).attr("dy",".35em").style("font-family","'IBM Plex Mono',monospace").style("font-size","10px").style("fill","var(--muted)").text("€"+d.unit_price.toFixed(2));
+    svg.append("rect").attr("x",M.l).attr("y",y).attr("width",x(d.regular_ppl)-M.l).attr("height",bar-8).attr("fill",C[d.sugar_class]||"#888").attr("opacity",.85).attr("rx",2);
+    svg.append("text").attr("x",M.l-8).attr("y",y+(bar-8)/2).attr("dy",".35em").attr("text-anchor","end").style("font-family","'IBM Plex Mono',monospace").style("font-size","10px").style("fill","var(--ink)").text(`${SUGAR[d.sugar_class]} ${d.pack_count>1?d.pack_count+"×":""}${d.pack} ${d.container}`);
+    svg.append("text").attr("x",x(d.regular_ppl)+6).attr("y",y+(bar-8)/2).attr("dy",".35em").style("font-family","'IBM Plex Mono',monospace").style("font-size","10px").style("fill","var(--muted)").text(eur(d.regular_ppl));
   });
-  document.getElementById("ppl-legend").innerHTML=`<span><i class="swatch" style="background:${palette[0]}"></i>Original (full sugar)</span><span><i class="swatch" style="background:${palette[1]}"></i>Zero Sugar</span>`;
+  const present=[...new Set(data.map(d=>d.sugar_class))];
+  document.getElementById("ppl-legend").innerHTML=present.map(k=>`<span><i class="swatch" style="background:${C[k]}"></i>${SUGAR[k]}</span>`).join("");
 }
-function renderTrend(rows){
-  const el=document.getElementById("trend");
-  if(!rows.length){el.innerHTML='<div class="empty">No trend data yet — needs ≥1 daily run.</div>';return;}
-  rows.forEach(r=>{ r._key=`${r.variant} ${r.pack_count>1?r.pack_count+"×":""}${r.pack}`; r._date=new Date(r.date*1000); });
-  const days=[...new Set(rows.map(r=>r.date))];
-  if(days.length<2){el.innerHTML='<div class="empty">Trend appears once ≥2 days of data are collected. Currently 1 day — the daily cron will build history automatically.</div>';return;}
-  const series=d3.group(rows,d=>d._key);
-  const W=el.clientWidth||980,H=360,M={t:20,r:20,b:36,l:48};
-  const x=d3.scaleTime().domain(d3.extent(rows,d=>d._date)).range([M.l,W-M.r]);
-  const y=d3.scaleLinear().domain([d3.min(rows,d=>d.base_price)*.96,d3.max(rows,d=>d.base_price)*1.04]).range([H-M.b,M.t]);
-  const svg=d3.select(el).append("svg").attr("viewBox",`0 0 ${W} ${H}`).attr("width","100%");
-  svg.append("g").attr("class","chart-axis").attr("transform",`translate(0,${H-M.b})`).call(d3.axisBottom(x).ticks(6).tickFormat(d3.timeFormat("%b %d")));
-  svg.append("g").attr("class","chart-axis").attr("transform",`translate(${M.l},0)`).call(d3.axisLeft(y).ticks(5).tickFormat(d=>"€"+d.toFixed(2)));
-  const line=d3.line().x(d=>x(d._date)).y(d=>y(d.base_price)).curve(d3.curveMonotoneX);
-  let i=0;const leg=[];
-  for(const[k,v]of series){const c=palette[i%palette.length];i++;const s=v.slice().sort((a,b)=>a._date-b._date);
-    svg.append("path").datum(s).attr("fill","none").attr("stroke",c).attr("stroke-width",2).attr("d",line);
-    leg.push(`<span><i class="swatch" style="background:${c}"></i>${k}</span>`);}
-  document.getElementById("trend-legend").innerHTML=leg.join("");
+
+function renderPromos(rows){
+  const el=document.getElementById("promos");
+  const data=rows.filter(r=>r.active&&r.promo_share>0);
+  if(!data.length){el.innerHTML='<div class="empty">No promotions recorded for listed SKUs.</div>';return;}
+  el.innerHTML=`<table><thead><tr><th>Product</th><th class="num">Days on promotion</th><th>Mechanics seen</th>
+  <th class="num">Typical cut</th><th class="num">Deepest cut</th></tr></thead><tbody>
+  ${data.map(r=>`<tr><td>${r.title}</td><td class="num">${pct(r.promo_share)} <span class="muted">of ${r.days_observed}</span></td>
+  <td>${(r.mechanics||"").split(", ").filter(Boolean).map(m=>`<span class="tag">${MECH[m]||m}</span>`).join("")}</td>
+  <td class="num">${pct(r.avg_depth)}</td><td class="num">${pct(r.max_depth)}</td></tr>`).join("")}</tbody></table>
+  <p class="note">A SKU on promotion on most days has a regular price that shoppers rarely pay; treat its regular price as a reference point rather than a typical price.</p>`;
+}
+
+function renderTrend(c){
+  const el=document.getElementById("trend"), rows=c.trend||[];
+  const formats=(c.sugar_tax_spread||[]).map(r=>r.format_key);
+  if(!rows.length||!formats.length){el.innerHTML='<div class="empty">The trend appears once matched formats have at least two days of history.</div>';return;}
+  const parse=s=>new Date(s+"T00:00:00Z");
+  const xDom=d3.extent(rows,r=>parse(r.date));
+  formats.forEach(fk=>{
+    const fr=rows.filter(r=>r.format_key===fk&&(r.sugar_class==="full"||r.sugar_class==="zero"||r.sugar_class==="diet"));
+    if(!fr.length) return;
+    const box=d3.select(el).append("div").attr("class","mini");
+    const sample=fr[0]; box.append("h4").text(fmtPack(sample));
+    const W=320,H=150,M={t:8,r:8,b:22,l:40};
+    const lo=d3.min(fr,r=>Math.min(r.effective_ppl,r.regular_ppl)), hi=d3.max(fr,r=>Math.max(r.effective_ppl,r.regular_ppl));
+    const x=d3.scaleUtc().domain(xDom).range([M.l,W-M.r]);
+    const y=d3.scaleLinear().domain([lo*.92,hi*1.05]).nice().range([H-M.b,M.t]);
+    const svg=box.append("svg").attr("viewBox",`0 0 ${W} ${H}`).attr("width","100%").attr("role","img").attr("aria-label",`Price per litre over time, ${fmtPack(sample)}`);
+    svg.append("g").attr("class","chart-axis").attr("transform",`translate(0,${H-M.b})`).call(d3.axisBottom(x).ticks(4).tickFormat(d3.utcFormat("%b")));
+    svg.append("g").attr("class","chart-axis").attr("transform",`translate(${M.l},0)`).call(d3.axisLeft(y).ticks(4).tickFormat(d=>"€"+d.toFixed(2)));
+    for(const [k,v] of d3.group(fr,r=>r.sugar_class)){
+      const s=v.slice().sort((a,b)=>a.date.localeCompare(b.date));
+      const line=acc=>d3.line().x(d=>x(parse(d.date))).y(d=>y(d[acc])).curve(d3.curveStepAfter);
+      svg.append("path").datum(s).attr("fill","none").attr("stroke",C[k]).attr("stroke-width",1).attr("stroke-dasharray","3 3").attr("opacity",.6).attr("d",line("regular_ppl"));
+      svg.append("path").datum(s).attr("fill","none").attr("stroke",C[k]).attr("stroke-width",2).attr("d",line("effective_ppl"));
+    }
+  });
+  const shown=[...new Set(rows.filter(r=>formats.includes(r.format_key)).map(r=>r.sugar_class))];
+  document.getElementById("trend-legend").innerHTML=shown.filter(k=>C[k]).map(k=>`<span><i class="swatch" style="background:${C[k]}"></i>${SUGAR[k]}</span>`).join("")+
+    `<span>Solid: price paid after promotions · Dashed: regular price</span>`;
 }
 load();
 </script>
