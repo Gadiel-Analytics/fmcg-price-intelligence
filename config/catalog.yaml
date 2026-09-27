@@ -89,6 +89,27 @@ brands:
     match: ["monster"]
     zero_terms: ["ultra"]
 
+# Head-to-head pairs: each hero brand against its direct rival, matched pack for
+# pack (same pack size, count, container and sugar tier) on the price paid today.
+# require_title / exclude_title narrow each side to the comparable range.
+# adjacent: a different category shown separately from the core cola story.
+competitive_pairs:
+  - hero: "Coca-Cola"
+    rival: "Pepsi"
+    label: "Cola"
+  - hero: "Sprite"
+    rival: "7UP"
+    label: "Lemon-lime"
+    exclude_title: ["pink", "cherry", "cranberry", "lemonade"]
+  - hero: "Fanta"
+    rival: "Club"
+    label: "Orange"
+    require_title: ["orange"]
+  - hero: "Monster"
+    rival: "Red Bull"
+    label: "Energy"
+    adjacent: true
+
 # Titles containing any of these terms are dropped even if the brand matches
 # (e.g. spirit-and-cola ready-to-drink cans that carry a soft-drink name).
 exclude_title_terms: ["whiskey", "rum", "vodka", "jack daniel"]

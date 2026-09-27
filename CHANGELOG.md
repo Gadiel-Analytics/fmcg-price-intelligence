@@ -1,5 +1,28 @@
 # Changelog
 
+## F3 — Consulting-style redesign (2026-09-27)
+
+### Dashboard
+- New design system: white canvas, navy and indigo from the Gadiel Analytics palette, Inter
+  throughout, body text 16 px and above, tabular numerals for figures.
+- Six sections replace seven tabs: Summary, Sugar tax, Pack architecture, Promotions, Competition,
+  Methodology. Old links (`#overview`, `#trends`, `#price-architecture`) still resolve.
+- Nine numbered exhibits, each with an action title generated from the data, a source line and,
+  where useful, a data table and a "So what" note.
+- New charts: levy dumbbell, price-per-litre ladder against Pepsi, ladder-inversion check,
+  promotion calendar, 2 L price-paid timeline, head-to-head diverging bars, brand sugar premium,
+  energy price-level strip.
+- Charts render at the container width and switch to a stacked layout on phones.
+- Printing prints the section on screen, with data tables expanded.
+
+### Competition, redefined
+- Competition is now each Coca-Cola system brand against its direct rival, pack for pack
+  (`competitive_pairs` in `config/catalog.yaml`): Coca-Cola–Pepsi, Sprite–7UP, Fanta–Club, with
+  energy (Monster–Red Bull) shown separately as an adjacent category.
+- New cube tables: `head_to_head`, compact `promo_calendar`; `brand_summary` adds the full-sugar
+  premium at today's prices and the number of pack sizes priced at parity. Cube schema v4; the
+  dashboard still reads v3 files, showing empty states until the next run.
+
 ## F2.1 — Competition hotfix (2026-09-27)
 
 - **Retailer volume typo:** "Fanta Crimson Cherry Bottle (1.75 ml)" produced €1,805.56 per litre.

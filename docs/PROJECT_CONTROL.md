@@ -5,10 +5,10 @@
 
 | Field | Value |
 |---|---|
-| Document version | `v1.2.0` |
+| Document version | `v1.3.0` |
 | Owner | Gadiel Guadarrama |
 | Last updated | 2026-09-27 |
-| Current phase | F2 shipped (pending first live run) → F1 review and F4 in parallel |
+| Current phase | F3 redesign shipped → F4 advanced analytics |
 | Next external date | Irish Budget 2027, 6 Oct 2026 (possible SSDT change → event study) |
 
 Update protocol: amend the relevant register, bump the version (patch = status/typo, minor = new
@@ -45,6 +45,8 @@ Revenue Growth Management terms, with the strength of every claim stated explici
 | D-009 | Master-brand chrome, product-specific surface: every Gadiel Analytics product shares the brand bar, monogram, byline and share card; each keeps its own content palette | Consistent ownership signal without re-skinning each product |
 | D-010 | Licence: all rights reserved, source available for viewing and evaluation (`COPYRIGHT.md`) | Flagship commercial IP; consistent with Matchday Intelligence |
 | D-011 | Tabbed information architecture with deep links; one topic per tab | Scales with F2–F4 without an ever-longer page; shareable links to specific evidence |
+| D-012 | Consulting-report grammar: action titles computed from data with guards, numbered exhibits, source lines, one highlight colour | Premium consulting standard; findings change with evidence and never overstate it |
+| D-013 | Competition = each hero brand against its direct rival, pack for pack, on price paid today; energy is an adjacent category | Answers the commercial question instead of listing the shelf |
 
 ## 3. Roadmap and gates
 
@@ -54,7 +56,8 @@ Revenue Growth Management terms, with the strength of every claim stated explici
 | F0.1 Brand | Brand bar, byline, share card, favicon, ownership, tabs, licence | Links render a branded preview on LinkedIn and X | **Done** |
 | F1 Price truth review | Validate regular-price inference against 2–4 weeks of new data; decide handling of perma-promoted SKUs | Inference disagreements < 5% of promo SKU-days on manual check | Next |
 | F2 Competitive scope | Pepsi / Pepsi Max, 7UP, Club, Fanta, Sprite, SuperValu own-label cola, Monster, Red Bull; brand → manufacturer map; sugar band per product | ≥ 80 active SKUs; full/zero pairs for ≥ 3 brands | **Shipped** — gate checked on first live run |
-| F3 Second retailer | Retailer adapter interface; 1-hour feasibility spike per candidate before committing | Two retailers with matched SKUs on ≥ 10 formats | Planned |
+| F3 Redesign | Consulting-report dashboard, head-to-head competition | Nine exhibits render on desktop and phone with no errors | **Done** |
+| F3b Second retailer | Retailer adapter interface; 1-hour feasibility spike per candidate before committing | Two retailers with matched SKUs on ≥ 10 formats | Planned |
 | F4 Advanced sections | Assortment tracker (listings/delistings), pack-change detection, deposit-inclusive €/L (DRS €0.15/€0.25), 30-day reference-price context, reformulated brands as a quasi-control for the levy spread | Three quantified insights suitable for a case study | Planned |
 | F5 AI layer | In-browser SQL (DuckDB-WASM) over the Parquet; weekly brief generated in CI and checked by a deterministic claim-strength guardrail | Brief contains no causal claim unsupported by the evidence rules | Planned |
 | F6 Launch | Methodology page, case study, public post | Published | Planned |
@@ -66,6 +69,7 @@ Revenue Growth Management terms, with the strength of every claim stated explici
 | D-001 – D-008 | 2026-09-26 | Baseline adopted (see §2) | Active |
 | D-009 | 2026-09-27 | Branding model (see §2) | Active |
 | D-010, D-011 | 2026-09-27 | Licence; tabbed IA (see §2) | Active |
+| D-012, D-013 | 2026-09-27 | Report grammar; head-to-head competition (see §2) | Active |
 
 ## 5. Open questions
 
@@ -99,3 +103,4 @@ Revenue Growth Management terms, with the strength of every claim stated explici
 | v1.0.0 | 2026-09-26 | Baseline: product definition, D-001–D-008, roadmap F0–F6 |
 | v1.1.0 | 2026-09-27 | F0 gate passed; F0.1 branding; D-009; Q-002 resolved; Q-005 opened |
 | v1.2.0 | 2026-09-27 | F2 shipped; D-010 licence; D-011 tabs; Q-005 resolved; Q-006 opened |
+| v1.3.0 | 2026-09-27 | F2.1 hotfix and F3 redesign shipped; D-012, D-013 |

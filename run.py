@@ -31,7 +31,7 @@ import datastore as ds  # noqa: E402
 REPORTS_DIR = ROOT / "reports"
 FIXTURES_DIR = ROOT / "scrapers" / "fixtures"
 DRY_RUN_FIXTURE = FIXTURES_DIR / "supervalu_search_synthetic.html"
-CUBE_SCHEMA_VERSION = 3
+CUBE_SCHEMA_VERSION = 4
 
 
 def _records(df) -> list[dict]:
@@ -56,6 +56,8 @@ def export_cube_json(config: dict, parquet_path: Path = ds.FACT_PARQUET,
     counts = ds.daily_counts(con)
     competition = ds.competition_index(con)
     brands = ds.brand_summary(con)
+    h2h = ds.head_to_head(con)
+    calendar = ds.promo_calendar(con)
     promo_share = con.execute(
         "SELECT AVG((mechanic <> 'none')::INT) FROM obs WHERE brand_family = 'Coca-Cola'").fetchone()[0]
     con.close()
@@ -84,6 +86,8 @@ def export_cube_json(config: dict, parquet_path: Path = ds.FACT_PARQUET,
         "daily_counts": _records(counts),
         "competition_index": _records(competition),
         "brand_summary": _records(brands),
+        "head_to_head": _records(h2h),
+        "promo_calendar": calendar,
     }
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")

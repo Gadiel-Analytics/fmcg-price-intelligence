@@ -121,3 +121,23 @@ def test_volume_typo_and_cola_flavours(tmp_path):
     t = con.execute("SELECT total_litres, volume_corrected, effective_ppl FROM priced WHERE product_id='T'").fetchone()
     assert t[0] == pytest.approx(1.75) and t[1] and t[2] == pytest.approx(1.857, abs=0.001)
     assert con.execute("SELECT is_core FROM obs WHERE product_id='C'").fetchone()[0] is False
+
+
+def test_head_to_head_and_calendar(tmp_path):
+    p = tmp_path / "h.parquet"
+    ds.ingest([rec(1, "F", FULL, "full", 4.20), rec(1, "Z", ZERO, "zero", 3.40, "3 for €6.75")], p)
+    ds.ingest([rec(2, "F", FULL, "full", 4.20), rec(2, "Z", ZERO, "zero", 3.40, "3 for €6.75"),
+               rec(2, "PF", "Pepsi Regular Bottle (2 L)", "full", 2.65, "Only €2.65", brand="Pepsi"),
+               rec(2, "PZ", "Pepsi Max No Sugar Cola Bottle (2 L)", "zero", 2.65, "Only €2.65", brand="Pepsi"),
+               rec(2, "PC", "Pepsi Cream Soda Zero Sugar Bottle (2 L)", "zero", 1.00, brand="Pepsi")], p)
+    con = ds.connect(p, 2)
+    h = ds.head_to_head(con).set_index("sugar_tier")
+    assert h.loc["full", "gap"] == pytest.approx(2.65 / 4.20 - 1, abs=0.001)
+    assert h.loc["no_sugar", "hero_price"] == 2.25                  # multibuy per unit
+    assert h.loc["no_sugar", "rival_price"] == 2.65                 # cream soda excluded
+    cal = ds.promo_calendar(con)
+    assert cal["days"] == 2
+    codes = {s["product_id"]: s["codes"] for s in cal["skus"]}
+    assert codes["Z"] == "mm" and codes["PF"] == ".p" and "F" not in codes
+    bs = ds.brand_summary(con).set_index("brand_family")
+    assert bs.loc["Pepsi", "parity_formats_today"] == 1

@@ -31,28 +31,26 @@ This system reproduces, at hobby scale and zero cost, the kind of daily price-in
 that underpins those decisions — and frames the output in RGM language. Trade investment is not
 observable from the shelf, and the project does not claim to measure it.
 
-## What the data shows (SuperValu IE, 115 days to 26 Sep 2026)
+## What the data shows (SuperValu IE, 27 Sep 2026)
 
-Regular (non-promotional) shelf prices, like-for-like by pack size, pack count and container,
-flavoured and caffeine-free variants excluded:
+Coca-Cola history runs from 4 Jun 2026 (116 days); competitor history from 27 Sep 2026, so the
+competitive read is a first snapshot. The dashboard recomputes every finding daily.
 
-- **Full-sugar Coca-Cola carries a premium over Zero in every matched format: +4% (500 ml PET)
-  to +24% (2 L PET), or €0.20–€0.91 per litre.**
-- Against the levy on full-sugar drinks (**€0.30/L** incl. VAT), that premium ranges from
-  **0.67× to 3.03×**; six of eight formats sit above 1×. The single can carries three times the
-  levy; the 500 ml bottle and the 2 × 2 L multipack carry less than the levy.
-- **The 2 L Zero Sugar bottle was on promotion on every one of 115 days** (multibuys, price cuts,
-  value badges). Its regular price is a reference point shoppers rarely pay.
-- **Diet Coke is priced identically to Zero Sugar in all eight matched formats** (collected from
-  27 Sep 2026): the untaxed range is priced as one, so the full-sugar premium is the only sugar-based
-  price step in the portfolio.
-- **18 of 24 listed SKUs held a single price for the whole period**; price movement happens
-  through promotions (19% of SKU-days), not list-price changes.
+- **Coca-Cola charges a full-sugar premium on every pack** (+4% to +24% per litre over Zero Sugar,
+  regular prices). Against the levy on full-sugar drinks (**€0.30/L** incl. VAT) the premium ranges
+  from **0.67× to 3.03×**; six of eight packs sit above the levy.
+- **Pepsi largely does not:** Pepsi and Pepsi Max cost the same in 6 of 7 pack sizes.
+- **Pepsi is cheaper than Coca-Cola on 8 of 9 matched packs** at today's prices; only the promoted
+  Coca-Cola Zero Sugar 2 L bottle (3 for €6.75) puts Coca-Cola ahead. Five of the nine Pepsi prices
+  require a SuperValu Real Rewards card.
+- **Coca-Cola promotes the 2 L bottle almost permanently:** four 2 L SKUs were on promotion on at
+  least 90% of days; shoppers could buy the 2 L Zero Sugar below its regular price on every day.
+- **Diet Coke is priced identically to Zero Sugar** in all eight matched packs.
+- **One ladder inversion:** the 500 ml Zero Sugar can costs 8.5% more per litre than the 330 ml can.
 
 **How to read the levy ratio.** A ratio above 1× does not show that the tax is over-passed to
 shoppers, and one below 1× does not show absorption: the premium also reflects pricing choices per
-pack. The ratio is a benchmark, not a measured pass-through. The project states the strength of
-its claims explicitly rather than implying causality the data cannot support.
+pack. It is a benchmark, not a measured pass-through.
 
 ## Coverage
 
@@ -68,9 +66,20 @@ Coca-Cola history runs from 4 Jun 2026; competitor collection started with the F
 
 ## Dashboard
 
-Seven tabs, each addressable by link (e.g. `dashboard.html#competition`):
-**Overview** (KPIs and findings recomputed daily) · **Sugar tax** · **Price architecture** ·
-**Promotions** · **Trends** · **Competition** · **Methodology**. Printing the page prints every tab.
+A consulting-style report in six sections, each addressable by link (e.g. `dashboard.html#competition`):
+
+| Section | Exhibits |
+|---|---|
+| **Summary** | Headline, four KPIs and key messages, all computed from the day's data |
+| **Sugar tax** | 1 · Full-sugar premium against the levy, pack by pack (dumbbell with levy band) |
+| **Pack architecture** | 2 · Price-per-litre ladder by pack volume, Coca-Cola against Pepsi · 3 · Ladder inversions |
+| **Promotions** | 4 · Promotion calendar (SKU × day, by mechanic) · 5 · 2 L price paid against regular price |
+| **Competition** | 6 · Coca-Cola against Pepsi, pack for pack · 7 · Full-sugar premium by brand · 8 · Sprite–7UP and Fanta–Club · 9 · Energy (adjacent category) |
+| **Methodology** | Collection, pricing model, limits, compliance, ownership |
+
+Every exhibit has an action title stating its finding, a source line, and a data table where the
+chart carries exact values. Titles are generated from the data with explicit guards, so they
+change with the evidence and never overstate it.
 
 ## Architecture
 
@@ -175,9 +184,10 @@ provenance logged. Full statement in [`COMPLIANCE.md`](COMPLIANCE.md). Not legal
 - [x] M4 D3 dashboard
 - [x] M5 Deploy + accumulate daily history (continuous since 4 Jun 2026)
 - [x] F0 Hardening: correct current prices, promotion model, levy benchmark, tests, quality gate
-- [x] F2 Competitive scope: Pepsi, own-label cola, Sprite, 7UP, Fanta, Club, Red Bull, Monster
+- [x] F2 Competitive scope: Pepsi, Sprite, 7UP, Fanta, Club, Red Bull, Monster
+- [x] F3 Consulting-style redesign: six sections, nine exhibits, head-to-head competition
 - [ ] F3 Second retailer
-- [ ] F4 Advanced sections: assortment tracker, pack-change detection, deposit-inclusive prices
+- [ ] F4 Advanced analytics: price-change feed, assortment tracker, EDLP vs high-low, Budget event annotation, deposit-inclusive prices
 - [ ] F5 In-browser SQL over the Parquet history; weekly brief with claim-strength guardrails
 
 Details and gates: [`docs/PROJECT_CONTROL.md`](docs/PROJECT_CONTROL.md).

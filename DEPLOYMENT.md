@@ -64,6 +64,12 @@ Edit `config/catalog.yaml` only:
 
 Keep `compliance.max_skus_per_run` above the expected SKU count, or later queries are skipped.
 
+## After changing the dashboard
+
+GitHub Pages redeploys a minute or two after each push, and browsers cache `dashboard.html`.
+Open the dashboard with a hard refresh (Cmd+Shift+R on macOS, Ctrl+F5 on Windows) before judging
+a change; `cube.json` is always fetched fresh.
+
 ## GitHub Pages
 
 Settings → Pages → Deploy from a branch → `main`, folder `/ (root)`. The dashboard reads

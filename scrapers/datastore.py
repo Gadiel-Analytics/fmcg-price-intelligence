@@ -14,6 +14,7 @@ Why DuckDB: in-process analytical SQL over Parquet, zero server, runs anywhere.
 from __future__ import annotations
 
 import dataclasses
+import re
 from pathlib import Path
 
 import duckdb
@@ -83,12 +84,12 @@ def ingest(records: list, parquet_path: Path = FACT_PARQUET) -> int:
 CONFIG_PATH = ROOT / "config" / "catalog.yaml"
 
 
-def _load_brands(config: dict | None) -> list[dict]:
+def _load_config(config: dict | None) -> dict:
     if config is None:
         import yaml
         with open(CONFIG_PATH, "r", encoding="utf-8") as fh:
             config = yaml.safe_load(fh)
-    return config.get("brands") or []
+    return config
 
 
 def _register_brand_map(con, brands: list[dict]) -> None:
@@ -105,12 +106,26 @@ def _register_brand_map(con, brands: list[dict]) -> None:
         con.executemany("INSERT INTO brand_map VALUES (?, ?, ?, ?, ?, ?)", rows)
 
 
+def _register_pairs(con, pairs: list[dict]) -> None:
+    con.execute("""CREATE TABLE pairs (pair_id INTEGER, hero VARCHAR, rival VARCHAR, label VARCHAR,
+                   adjacent BOOLEAN, require_re VARCHAR, exclude_re VARCHAR)""")
+    rows = []
+    for i, p in enumerate(pairs):
+        esc = lambda terms: "|".join(re.escape(t.lower()) for t in terms)
+        rows.append([i, p["hero"], p["rival"], p.get("label", p["hero"]), bool(p.get("adjacent", False)),
+                     esc(p.get("require_title", [])), esc(p.get("exclude_title", []))])
+    if rows:
+        con.executemany("INSERT INTO pairs VALUES (?, ?, ?, ?, ?, ?, ?)", rows)
+
+
 def connect(parquet_path: Path = FACT_PARQUET,
             active_window_days: int = DEFAULT_ACTIVE_WINDOW_DAYS,
             config: dict | None = None) -> duckdb.DuckDBPyConnection:
     """In-memory connection with brand_map and the analytical views registered."""
     con = duckdb.connect(":memory:")
-    _register_brand_map(con, _load_brands(config))
+    cfg = _load_config(config)
+    _register_brand_map(con, cfg.get("brands") or [])
+    _register_pairs(con, cfg.get("competitive_pairs") or [])
     fact = f"read_parquet('{_sql_path(parquet_path)}')"
     for f in sorted(SQL_DIR.glob("*.sql")):
         sql = (f.read_text(encoding="utf-8")
@@ -131,7 +146,7 @@ def latest_prices(con):
     return _df(con, """
         SELECT product_id, brand, brand_family, owner, segment, private_label,
                variant, title, pack, pack_count, container,
-               sugar_class, is_core, flavoured, caffeine_free, total_litres,
+               sugar_class, sugar_tier, is_core, flavoured, caffeine_free, total_litres,
                base_price, regular_price, effective_price,
                ROUND(regular_ppl, 2) AS regular_ppl,
                ROUND(effective_ppl, 2) AS effective_ppl,
@@ -286,17 +301,27 @@ def brand_summary(con):
         ),
         tier AS (
             SELECT brand_family, format_key,
-                   AVG(regular_ppl) FILTER (WHERE sugar_tier = 'full')     AS full_ppl,
-                   AVG(regular_ppl) FILTER (WHERE sugar_tier = 'no_sugar') AS ns_ppl
+                   AVG(regular_ppl)   FILTER (WHERE sugar_tier = 'full')     AS full_ppl,
+                   AVG(regular_ppl)   FILTER (WHERE sugar_tier = 'no_sugar') AS ns_ppl,
+                   AVG(effective_ppl) FILTER (WHERE sugar_tier = 'full')     AS full_eff,
+                   AVG(effective_ppl) FILTER (WHERE sugar_tier = 'no_sugar') AS ns_eff
             FROM active WHERE is_core GROUP BY ALL
         ),
         prem AS (
-            SELECT brand_family, ROUND(MEDIAN(full_ppl / ns_ppl - 1), 3) AS sugar_premium,
-                   COUNT(*) AS premium_formats
-            FROM tier WHERE full_ppl IS NOT NULL AND ns_ppl IS NOT NULL GROUP BY brand_family
+            SELECT brand_family,
+                   ROUND(MEDIAN(full_ppl / ns_ppl - 1)
+                         FILTER (WHERE full_ppl IS NOT NULL AND ns_ppl IS NOT NULL), 3) AS sugar_premium,
+                   COUNT(*) FILTER (WHERE full_ppl IS NOT NULL AND ns_ppl IS NOT NULL) AS premium_formats,
+                   ROUND(MEDIAN(full_eff / ns_eff - 1)
+                         FILTER (WHERE full_eff IS NOT NULL AND ns_eff IS NOT NULL), 3) AS sugar_premium_today,
+                   COUNT(*) FILTER (WHERE full_eff IS NOT NULL AND ns_eff IS NOT NULL) AS premium_formats_today,
+                   COUNT(*) FILTER (WHERE full_eff IS NOT NULL AND ns_eff IS NOT NULL
+                                    AND abs(full_eff / ns_eff - 1) < 0.005) AS parity_formats_today
+            FROM tier GROUP BY brand_family
         )
         SELECT c.*, h.days_observed, h.promo_share, h.avg_depth, h.loyalty_share,
-               p.sugar_premium, p.premium_formats, m.priority
+               p.sugar_premium, p.premium_formats, p.sugar_premium_today,
+               p.premium_formats_today, p.parity_formats_today, m.priority
         FROM cur c
         JOIN hist h USING (brand_family)
         LEFT JOIN prem p USING (brand_family)
@@ -304,6 +329,86 @@ def brand_summary(con):
              ON m.family = c.brand_family
         ORDER BY m.priority
     """)
+
+
+def head_to_head(con):
+    """
+    Each hero brand against its configured rival, pack for pack: same format
+    (size, count, container) and sugar tier, on the price paid today per unit.
+    gap = rival price / hero price - 1 (negative: rival cheaper).
+    """
+    return _df(con, """
+        WITH a AS (SELECT * FROM active WHERE is_core AND effective_price IS NOT NULL),
+        side AS (
+            SELECT p.pair_id, 'hero' AS role, a.format_key, a.sugar_tier,
+                   ANY_VALUE(a.pack) AS pack, ANY_VALUE(a.pack_count) AS pack_count,
+                   ANY_VALUE(a.container) AS container, MIN(a.total_litres) AS total_litres,
+                   AVG(a.effective_price) AS price, AVG(a.effective_ppl) AS ppl,
+                   BOOL_OR(a.mechanic <> 'none') AS promo, BOOL_OR(a.mechanic = 'loyalty_price') AS loyalty,
+                   string_agg(DISTINCT a.title, ' | ' ORDER BY a.title) AS titles
+            FROM a JOIN pairs p ON a.brand_family = p.hero
+            WHERE (p.require_re = '' OR regexp_matches(lower(a.title), p.require_re))
+              AND (p.exclude_re = '' OR NOT regexp_matches(lower(a.title), p.exclude_re))
+            GROUP BY ALL
+            UNION ALL
+            SELECT p.pair_id, 'rival', a.format_key, a.sugar_tier,
+                   ANY_VALUE(a.pack), ANY_VALUE(a.pack_count), ANY_VALUE(a.container), MIN(a.total_litres),
+                   AVG(a.effective_price), AVG(a.effective_ppl),
+                   BOOL_OR(a.mechanic <> 'none'), BOOL_OR(a.mechanic = 'loyalty_price'),
+                   string_agg(DISTINCT a.title, ' | ' ORDER BY a.title)
+            FROM a JOIN pairs p ON a.brand_family = p.rival
+            WHERE (p.require_re = '' OR regexp_matches(lower(a.title), p.require_re))
+              AND (p.exclude_re = '' OR NOT regexp_matches(lower(a.title), p.exclude_re))
+            GROUP BY ALL
+        )
+        SELECT p.pair_id, p.label, p.hero, p.rival, p.adjacent,
+               h.format_key, h.pack, h.pack_count, h.container, h.sugar_tier, h.total_litres,
+               ROUND(h.price, 2) AS hero_price, ROUND(r.price, 2) AS rival_price,
+               ROUND(h.ppl, 2) AS hero_ppl, ROUND(r.ppl, 2) AS rival_ppl,
+               ROUND(r.price / h.price - 1, 3) AS gap,
+               h.promo AS hero_promo, r.promo AS rival_promo,
+               h.loyalty AS hero_loyalty, r.loyalty AS rival_loyalty,
+               h.titles AS hero_titles, r.titles AS rival_titles
+        FROM side h
+        JOIN side r ON r.pair_id = h.pair_id AND r.format_key = h.format_key
+                   AND r.sugar_tier = h.sugar_tier AND r.role = 'rival'
+        JOIN pairs p ON p.pair_id = h.pair_id
+        WHERE h.role = 'hero'
+        ORDER BY p.pair_id, h.pack_count, h.total_litres / h.pack_count, h.sugar_tier
+    """)
+
+
+MECH_CODE = {"none": "n", "multibuy": "m", "price_cut": "p", "loyalty_price": "r", "badge": "b"}
+
+
+def promo_calendar(con) -> dict:
+    """
+    Compact daily promotion calendar for active SKUs that carried any promotion:
+    one string per SKU, one character per day from the first run date
+    (n none, m multibuy, p price cut, r Rewards price, b value badge, . not observed).
+    """
+    first = con.execute("SELECT MIN(d) FROM obs").fetchone()[0]
+    last = con.execute("SELECT MAX(d) FROM obs").fetchone()[0]
+    if first is None:
+        return {"start": None, "days": 0, "skus": []}
+    n = (last - first).days + 1
+    rows = con.execute("""
+        SELECT p.product_id, ANY_VALUE(p.title), ANY_VALUE(p.brand_family), ANY_VALUE(p.sugar_tier),
+               list(struct_pack(d := p.d, m := p.mechanic) ORDER BY p.d)
+        FROM priced p
+        WHERE p.product_id IN (SELECT product_id FROM active)
+        GROUP BY p.product_id
+        HAVING BOOL_OR(p.mechanic <> 'none')
+        ORDER BY ANY_VALUE(p.brand_family), ANY_VALUE(p.title)
+    """).fetchall()
+    skus = []
+    for pid, title, fam, tier, days in rows:
+        codes = ["."] * n
+        for e in days:
+            codes[(e["d"] - first).days] = MECH_CODE.get(e["m"], "b")
+        skus.append({"product_id": pid, "title": title, "brand_family": fam,
+                     "sugar_tier": tier, "codes": "".join(codes)})
+    return {"start": first.isoformat(), "days": n, "skus": skus}
 
 
 def daily_counts(con):
