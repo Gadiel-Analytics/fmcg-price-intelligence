@@ -90,3 +90,8 @@ def test_per_run_cap_is_global(config):
     first = build_records(cards, config, "q1", "t", "u", seen, 2)
     second = build_records(cards, config, "q2", "t", "u", seen, 0)
     assert len(first) == 2 and second == []
+
+
+def test_ml_typo_read_as_litres():
+    assert total_litres("Fanta Crimson Cherry Bottle (1.75 ml)") == 1.75
+    assert total_litres("Coca-Cola Can (330 ml)") == 0.33

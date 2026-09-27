@@ -221,8 +221,10 @@ def promo_summary(con):
 def competition_index(con):
     """
     Like-for-like price index within each segment: active core SKUs matched by
-    format and sugar tier (full / no sugar). The first brand listed for a segment
-    in the catalog is the reference (index 100). Only cells where the reference
+    format and sugar tier (full / no sugar), on the price paid today (after
+    promotions; loyalty-gated prices flagged). Regular prices are often unknown
+    for competitors in their first days, so the regular index may be NULL.
+    The first brand listed for a segment in the catalog is the reference (index 100). Only cells where the reference
     and at least one other brand share the format and tier are returned.
     """
     return _df(con, """
@@ -231,9 +233,10 @@ def competition_index(con):
                    a.brand_family, MIN(m.priority) AS priority,
                    AVG(a.regular_ppl) AS regular_ppl, AVG(a.effective_ppl) AS effective_ppl,
                    COUNT(*) AS skus, BOOL_OR(a.mechanic <> 'none') AS on_promo,
+                   BOOL_OR(a.mechanic = 'loyalty_price') AS loyalty,
                    MIN(a.total_litres / a.pack_count) AS unit_litres
             FROM active a JOIN brand_map m ON m.family = a.brand_family
-            WHERE a.is_core AND a.segment IS NOT NULL AND a.regular_ppl IS NOT NULL
+            WHERE a.is_core AND a.segment IS NOT NULL AND a.effective_ppl IS NOT NULL
             GROUP BY ALL
         ),
         ref AS (
@@ -253,7 +256,8 @@ def competition_index(con):
                ROUND(c.regular_ppl, 2) AS regular_ppl,
                ROUND(c.effective_ppl, 2) AS effective_ppl,
                ROUND(100 * c.regular_ppl / r.ref_regular, 0) AS regular_index,
-               ROUND(100 * c.effective_ppl / r.ref_effective, 0) AS effective_index
+               ROUND(100 * c.effective_ppl / r.ref_effective, 0) AS effective_index,
+               c.loyalty AS loyalty_price
         FROM cell c
         JOIN shared s USING (segment, format_key, sugar_tier)
         JOIN refcell r USING (segment, format_key, sugar_tier)

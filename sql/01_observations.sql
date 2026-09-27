@@ -10,7 +10,12 @@
 -- =============================================================================
 CREATE OR REPLACE VIEW obs AS
 WITH raw AS (
-    SELECT *,
+    -- Retailer volume typos: a stated unit below 50 ml (e.g. "1.75 ml" for 1.75 L)
+    -- is read as litres. Flagged as volume_corrected.
+    SELECT * REPLACE (
+               CASE WHEN total_litres / pack_count < 0.05 THEN total_litres * 1000
+                    ELSE total_litres END AS total_litres),
+           (total_litres / pack_count < 0.05) AS volume_corrected,
            CAST(scraped_at AS DATE) AS d,
            NULLIF(TRIM(clubcard_price_text), '') AS promo_text
     FROM {fact}
@@ -30,7 +35,7 @@ mapped AS (
 ),
 flags AS (
     SELECT *,
-        regexp_matches(lower(title), 'cherry|vanilla|lime|mango|raspberry') AS flavoured,
+        regexp_matches(lower(title), 'cherry|vanilla|lime|mango|raspberry|cream|strawberr|peach|pink|berry') AS flavoured,
         (title ILIKE '%caffeine free%' OR title ILIKE '%zero caffeine%')   AS caffeine_free,
         TRY_CAST(regexp_extract(promo_text, '(\d+)\s*for\s*€\s*(\d+(?:\.\d+)?)', 1) AS INTEGER) AS mb_qty,
         TRY_CAST(regexp_extract(promo_text, '(\d+)\s*for\s*€\s*(\d+(?:\.\d+)?)', 2) AS DOUBLE)  AS mb_price,

@@ -1,5 +1,18 @@
 # Changelog
 
+## F2.1 — Competition hotfix (2026-09-27)
+
+- **Retailer volume typo:** "Fanta Crimson Cherry Bottle (1.75 ml)" produced €1,805.56 per litre.
+  Stated units below 50 ml are now read as litres (flag `volume_corrected`), in the scraper and
+  retroactively in SQL.
+- **Cola flavour exclusion extended** (cream soda, strawberry, peach, pink, berry): Pepsi Cream Soda
+  and Strawberries 'N' Cream no longer enter the like-for-like cola comparison.
+- **Competition index now uses the price paid today.** Most competitor SKUs were on a Rewards or
+  price-cut promotion on their first day, so their regular price is not yet observable and the
+  regular-price index was nearly empty. The index now compares prices after promotions, with
+  Rewards prices marked; the regular index is kept in the cube for when regular prices appear.
+- Overview finding rewritten on the same basis ("cheaper on N of M matched packs").
+
 ## F0.1 + F2 — Brand, navigation and competition (2026-09-27)
 
 ### Competition (F2)

@@ -87,6 +87,7 @@ def test_competition_index_and_brand_summary(tmp_path):
     assert full.loc["Coca-Cola", "regular_index"] == 100
     assert full.loc["Pepsi", "regular_index"] == 71            # 1.50 / 2.10
     assert full.loc["SuperValu own-label", "regular_index"] == 24
+    assert full.loc["Pepsi", "effective_index"] == 71
     assert set(ci.segment) == {"Cola"}                           # Monster has no rival format
     bs = ds.brand_summary(con).set_index("brand_family")
     assert bs.loc["Coca-Cola", "sugar_premium"] == pytest.approx(0.235, abs=0.001)
@@ -109,3 +110,14 @@ def test_regular_price_unknown_when_never_seen_clean(tmp_path):
     row = ds.connect(p, 2).execute(
         "SELECT regular_price, regular_ppl, promo_depth FROM priced").fetchone()
     assert row == (None, None, None)
+
+
+def test_volume_typo_and_cola_flavours(tmp_path):
+    p = tmp_path / "v.parquet"
+    ds.ingest([rec(1, "T", "Fanta Crimson Cherry Bottle (1.75 ml)", "full", 3.25, pack="1.75 ml",
+                   litres=0.00175, brand="Fanta"),
+               rec(1, "C", "Pepsi Cream Soda Zero Sugar Bottle (2 L)", "zero", 2.65, brand="Pepsi")], p)
+    con = ds.connect(p, 2)
+    t = con.execute("SELECT total_litres, volume_corrected, effective_ppl FROM priced WHERE product_id='T'").fetchone()
+    assert t[0] == pytest.approx(1.75) and t[1] and t[2] == pytest.approx(1.857, abs=0.001)
+    assert con.execute("SELECT is_core FROM obs WHERE product_id='C'").fetchone()[0] is False

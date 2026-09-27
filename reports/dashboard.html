@@ -189,7 +189,7 @@
 
 <section role="tabpanel" id="tab-competition" aria-labelledby="t-competition" tabindex="0" hidden>
 <div class="section-title">Competition</div>
-<p class="section-note">Coca-Cola alongside Pepsi, SuperValu's own-label cola, lemon-lime, orange and energy brands. Prices are regular shelf prices per litre for SKUs listed today.</p>
+<p class="section-note">Coca-Cola alongside Pepsi, lemon-lime, orange and energy brands, compared pack for pack on the price shoppers pay today. Competitor collection started 27 September 2026.</p>
 <div id="comp-body"></div>
 </section>
 
@@ -321,8 +321,8 @@ function renderOverview(){
   const ci=c.competition_index.filter(r=>r.segment==="Cola"&&r.brand_family!==r.ref_family);
   const fams=[...new Set(ci.map(r=>r.brand_family))];
   fams.forEach(f=>{const rr=ci.filter(r=>r.brand_family===f);
-    const avg=rr.reduce((a,r)=>a+r.regular_index,0)/rr.length;
-    F.push({cls:"comp",t:`${esc(f)} is priced at an average index of ${avg.toFixed(0)} against Coca-Cola (= 100) per litre, across ${rr.length} shared format${rr.length>1?"s":""} and sugar tiers.`,go:"competition",l:"See competition"});});
+    const avg2=rr.reduce((a,r)=>a+r.effective_index,0)/rr.length, cheaper=rr.filter(r=>r.effective_index<100).length;
+    F.push({cls:"comp",t:`At today's prices ${esc(f)} is cheaper than Coca-Cola on ${cheaper} of ${rr.length} matched packs, at an average index of ${avg2.toFixed(0)} (Coca-Cola = 100).`,go:"competition",l:"See competition"});});
   if(!fams.length&&(k.brands_tracked||1)<2) F.push({cls:"comp",t:"Competitor prices (Pepsi, own-label, lemon-lime, orange and energy brands) start with the next daily run and appear here automatically.",go:"competition",l:"About the competition view"});
   document.getElementById("findings").innerHTML=F.map(f=>`<div class="finding ${f.cls||""}"><p>${f.t}</p><a href="#${f.go}" data-goto="${f.go}">${f.l}</a></div>`).join("");
 }
@@ -448,8 +448,8 @@ function renderCompetition(){
     ${fams.map(f=>`<th class="num">${esc(f)}</th>`).join("")}</tr></thead><tbody>
     ${cells.map(key=>{const [fk,tier]=key.split("|");const rr=rows.filter(r=>r.format_key===fk&&r.sugar_tier===tier);
       return `<tr><td class="fmt">${fmtPack(rr[0])}</td><td>${TIER[tier]}</td>${fams.map(f=>{const r=rr.find(x=>x.brand_family===f);
-        return r?`<td class="num">${r.regular_ppl.toFixed(2)} <span class="idx">${r.brand_family===ref?"":r.regular_index}</span></td>`:'<td class="num muted">—</td>';}).join("")}</tr>`;}).join("")}
-    </tbody></table></div><p class="note">€ per litre at regular shelf prices; small figures are the index against ${esc(ref)}. Price only: nothing here measures volumes, margins or trade terms.</p></div>`;
+        return r?`<td class="num">${r.effective_ppl.toFixed(2)}${r.loyalty_price?'<sup class="idx" title="Rewards price">R</sup>':""} <span class="idx">${r.brand_family===ref?"":r.effective_index}</span></td>`:'<td class="num muted">—</td>';}).join("")}</tr>`;}).join("")}
+    </tbody></table></div><p class="note">€ per litre paid today, after promotions; small figures are the index against ${esc(ref)}. R marks a price that requires SuperValu Real Rewards. Flavoured and caffeine-free variants are excluded. Price only: nothing here measures volumes, margins or trade terms.</p></div>`;
   });
   el.innerHTML=h;
 }

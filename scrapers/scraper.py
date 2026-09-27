@@ -147,7 +147,9 @@ def unit_size_litres(name: str) -> float | None:
     if not m:
         return None
     val = float(m.group(1))
-    return val / 1000 if m.group(2).lower() == "ml" else val
+    if m.group(2).lower() == "ml":
+        return val if val < 50 else val / 1000   # "1.75 ml" is a retailer typo for 1.75 L
+    return val
 
 
 def total_litres(name: str) -> float | None:
