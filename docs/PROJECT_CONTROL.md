@@ -5,11 +5,11 @@
 
 | Field | Value |
 |---|---|
-| Document version | `v1.3.0` |
+| Document version | `v1.4.0` |
 | Owner | Gadiel Guadarrama |
 | Last updated | 2026-09-27 |
-| Current phase | F3 redesign shipped → F4 advanced analytics |
-| Next external date | Irish Budget 2027, 6 Oct 2026 (possible SSDT change → event study) |
+| Current phase | F4a Budget watch shipped → F4b weekly change feed (after 7 days of competitor history) |
+| Next external date | Irish Budget 2027, 6 Oct 2026 — Exhibit 2 switches from baseline to before/after automatically |
 
 Update protocol: amend the relevant register, bump the version (patch = status/typo, minor = new
 decision/gate result, major = repositioning), add a line to §8, commit as
@@ -47,6 +47,7 @@ Revenue Growth Management terms, with the strength of every claim stated explici
 | D-011 | Tabbed information architecture with deep links; one topic per tab | Scales with F2–F4 without an ever-longer page; shareable links to specific evidence |
 | D-012 | Consulting-report grammar: action titles computed from data with guards, numbered exhibits, source lines, one highlight colour | Premium consulting standard; findings change with evidence and never overstate it |
 | D-013 | Competition = each hero brand against its direct rival, pack for pack, on price paid today; energy is an adjacent category | Answers the commercial question instead of listing the shelf |
+| D-014 | Events are studied descriptively: fixed 14-day windows, regular prices, changes under €0.02/L ignored, never attributed | Keeps the Budget read honest and reproducible; ties to the claim-strength guardrail |
 
 ## 3. Roadmap and gates
 
@@ -70,6 +71,7 @@ Revenue Growth Management terms, with the strength of every claim stated explici
 | D-009 | 2026-09-27 | Branding model (see §2) | Active |
 | D-010, D-011 | 2026-09-27 | Licence; tabbed IA (see §2) | Active |
 | D-012, D-013 | 2026-09-27 | Report grammar; head-to-head competition (see §2) | Active |
+| D-014 | 2026-09-27 | Event-study rules (see §2) | Active |
 
 ## 5. Open questions
 
@@ -77,7 +79,7 @@ Revenue Growth Management terms, with the strength of every claim stated explici
 |---|---|---|
 | Q-001 | Does the SuperValu card price include the DRS deposit, or is it shown separately? | Next real fixture capture |
 | Q-002 | ~~What brand label do Diet Coke cards carry?~~ **Resolved 2026-09-27: "Diet Coke".** | — |
-| Q-003 | Does Budget 2027 change SSDT rates or thresholds? | 6 Oct 2026 |
+| Q-003 | Does Budget 2027 change SSDT rates or thresholds? If so, add the effective date as an event and a `levy_schedule` line | 6 Oct 2026 |
 | Q-004 | Which second retailer is reachable at human rate without anti-bot escalation? | F3 spike |
 | Q-005 | ~~Repository licence?~~ **Resolved 2026-09-27: all rights reserved, source-available (D-010).** | — |
 | Q-006 | Do the competitor brand labels and sugar terms hold on live cards? Check the run log's dropped-labels line | First run after F2 |
@@ -104,3 +106,4 @@ Revenue Growth Management terms, with the strength of every claim stated explici
 | v1.1.0 | 2026-09-27 | F0 gate passed; F0.1 branding; D-009; Q-002 resolved; Q-005 opened |
 | v1.2.0 | 2026-09-27 | F2 shipped; D-010 licence; D-011 tabs; Q-005 resolved; Q-006 opened |
 | v1.3.0 | 2026-09-27 | F2.1 hotfix and F3 redesign shipped; D-012, D-013 |
+| v1.4.0 | 2026-09-27 | F4a Budget watch shipped; D-014; Q-003 procedure |

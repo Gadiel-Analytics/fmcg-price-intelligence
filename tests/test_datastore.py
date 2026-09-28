@@ -141,3 +141,42 @@ def test_head_to_head_and_calendar(tmp_path):
     assert codes["Z"] == "mm" and codes["PF"] == ".p" and "F" not in codes
     bs = ds.brand_summary(con).set_index("brand_family")
     assert bs.loc["Pepsi", "parity_formats_today"] == 1
+
+
+def test_levy_in_force_uses_schedule():
+    a = {"levy_per_litre_incl_vat": 0.30,
+         "levy_schedule": [{"from": "2018-05-01", "per_litre_incl_vat": 0.30},
+                           {"from": "2027-01-01", "per_litre_incl_vat": 0.40}]}
+    assert ds.levy_in_force(a, "2026-12-31") == 0.30
+    assert ds.levy_in_force(a, "2027-01-01") == 0.40
+    assert ds.levy_in_force({"levy_per_litre_incl_vat": 0.30}, "2026-01-01") == 0.30
+
+
+def _event_lake(tmp_path, days, jump_from=None):
+    p = tmp_path / "e.parquet"
+    for day in days:
+        full = 4.60 if jump_from and day >= jump_from else 4.20
+        ds.ingest([rec(day, "F", FULL, "full", full), rec(day, "Z", ZERO, "zero", 3.40),
+                   rec(day, "PF", "Pepsi Regular Bottle (2 L)", "full", 2.65, brand="Pepsi")], p)
+    return p
+
+
+def test_event_study_upcoming_captures_baseline(tmp_path):
+    p = _event_lake(tmp_path, range(1, 6))
+    ev = ds.event_study(ds.connect(p, 2), [{"id": "b", "date": "2026-07-20", "label": "Budget"}], 14)[0]
+    assert ev["status"] == "upcoming" and ev["days_to"] == 15
+    assert ev["pre_start"] == "2026-07-01" and ev["pre_days"] == 5
+    r = ev["rows"][0]
+    assert r["prem_pre"] == pytest.approx(0.40) and r["prem_post"] is None
+
+
+def test_event_study_after_event_measures_change(tmp_path):
+    p = _event_lake(tmp_path, range(1, 21), jump_from=11)
+    ev = ds.event_study(ds.connect(p, 2), [{"id": "b", "date": "2026-07-11", "label": "Budget"}], 14)[0]
+    assert ev["status"] == "in_window" and ev["post_days"] == 10
+    r = ev["rows"][0]
+    assert r["prem_pre"] == pytest.approx(0.40) and r["prem_post"] == pytest.approx(0.60)
+    assert r["delta"] == pytest.approx(0.20)
+    g = ev["rival"][0]
+    assert g["gap_pre"] == pytest.approx(2.65 / 4.20 - 1, abs=0.001)
+    assert g["gap_post"] == pytest.approx(2.65 / 4.60 - 1, abs=0.001)

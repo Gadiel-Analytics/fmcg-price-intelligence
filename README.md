@@ -71,10 +71,10 @@ A consulting-style report in six sections, each addressable by link (e.g. `dashb
 | Section | Exhibits |
 |---|---|
 | **Summary** | Headline, four KPIs and key messages, all computed from the day's data |
-| **Sugar tax** | 1 · Full-sugar premium against the levy, pack by pack (dumbbell with levy band) |
-| **Pack architecture** | 2 · Price-per-litre ladder by pack volume, Coca-Cola against Pepsi · 3 · Ladder inversions |
-| **Promotions** | 4 · Promotion calendar (SKU × day, by mechanic) · 5 · 2 L price paid against regular price |
-| **Competition** | 6 · Coca-Cola against Pepsi, pack for pack · 7 · Full-sugar premium by brand · 8 · Sprite–7UP and Fanta–Club · 9 · Energy (adjacent category) |
+| **Sugar tax** | 1 · Full-sugar premium against the levy, pack by pack · 2 · Budget watch: pre-Budget baseline, then before/after comparison |
+| **Pack architecture** | 3 · Price-per-litre ladder by pack volume, Coca-Cola against Pepsi · 4 · Ladder inversions |
+| **Promotions** | 5 · Promotion calendar (SKU × day, by mechanic) · 6 · 2 L price paid against regular price |
+| **Competition** | 7 · Coca-Cola against Pepsi, pack for pack · 8 · Full-sugar premium by brand · 9 · Sprite–7UP and Fanta–Club · 10 · Energy (adjacent category) |
 | **Methodology** | Collection, pricing model, limits, compliance, ownership |
 
 Every exhibit has an action title stating its finding, a source line, and a data table where the
@@ -187,7 +187,8 @@ provenance logged. Full statement in [`COMPLIANCE.md`](COMPLIANCE.md). Not legal
 - [x] F2 Competitive scope: Pepsi, Sprite, 7UP, Fanta, Club, Red Bull, Monster
 - [x] F3 Consulting-style redesign: six sections, nine exhibits, head-to-head competition
 - [ ] F3 Second retailer
-- [ ] F4 Advanced analytics: price-change feed, assortment tracker, EDLP vs high-low, Budget event annotation, deposit-inclusive prices
+- [x] F4a Budget watch: dated events, automatic before/after study, levy by date
+- [ ] F4b Advanced analytics: weekly change feed, assortment tracker, EDLP vs high-low, deposit-inclusive prices
 - [ ] F5 In-browser SQL over the Parquet history; weekly brief with claim-strength guardrails
 
 Details and gates: [`docs/PROJECT_CONTROL.md`](docs/PROJECT_CONTROL.md).

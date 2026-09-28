@@ -1,5 +1,20 @@
 # Changelog
 
+## F4a — Budget watch (2026-09-27)
+
+- **Dated events** (`events` in `config/catalog.yaml`), starting with Budget 2027 on 6 Oct 2026.
+- **Event study, automatic:** before an event, the latest 14 days of regular prices are held as a
+  baseline; from the event date, the 14 days before are compared with the days after — the
+  Coca-Cola full-sugar premium per matched pack and Pepsi's gap on price paid. No code change is
+  needed on the day. Output: `events` in the cube (schema v5).
+- **Levy by date** (`analysis.levy_schedule`): the benchmark uses the rate in force on the latest
+  run date, so a Budget change to the SSDT is one new config line.
+- **Dashboard:** new Exhibit 2 · Budget watch in Sugar tax (baseline table before the event,
+  before/after chart from it); later exhibits renumbered 3–10; event markers on the promotion
+  calendar and the 2 L timeline; Summary key message; Methodology "Events" paragraph.
+- **Guardrail:** changes after an event are reported, never attributed to it; changes under
+  €0.02 per litre count as no change.
+
 ## F3 — Consulting-style redesign (2026-09-27)
 
 ### Dashboard

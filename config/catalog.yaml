@@ -125,6 +125,26 @@ analysis:
   # pass-through (the spread also reflects commercial choices).
   levy_per_litre_incl_vat: 0.30
   levy_source: "https://www.revenue.ie/en/companies-and-charities/excise-and-licences/sugar-sweetened-drinks-tax/rate-of-tax.aspx"
+  # Levy by date, so a rate change is one new line. The benchmark uses the rate
+  # in force on the latest run date; levy_per_litre_incl_vat above is the fallback.
+  levy_schedule:
+    - from: "2018-05-01"
+      per_litre_incl_vat: 0.30
+      note: "SSDT top band (>= 8 g sugar/100 ml): EUR 24.39/hl ex-VAT"
+  # Days compared on each side of a dated event (before vs from the event date).
+  event_window_days: 14
+
+# Dated events annotated on time series and studied before/after automatically.
+# kind: policy | seasonal. An announcement and its effective date are separate
+# events when both are known (the SSDT was announced in October 2016 and took
+# effect in 2018).
+events:
+  - id: "budget-2027"
+    date: "2026-10-06"
+    label: "Budget 2027"
+    kind: "policy"
+    detail: "Budget 2027 announcement. Any change to the Sugar Sweetened Drinks Tax would appear here first."
+    source: "https://kpmg.com/ie/en/insights/tax/budget-2027.html"
 
 quality:
   # Refuse to ingest a run whose SKU count falls below this share of the

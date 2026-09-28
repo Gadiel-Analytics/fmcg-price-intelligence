@@ -31,7 +31,7 @@ import datastore as ds  # noqa: E402
 REPORTS_DIR = ROOT / "reports"
 FIXTURES_DIR = ROOT / "scrapers" / "fixtures"
 DRY_RUN_FIXTURE = FIXTURES_DIR / "supervalu_search_synthetic.html"
-CUBE_SCHEMA_VERSION = 4
+CUBE_SCHEMA_VERSION = 5
 
 
 def _records(df) -> list[dict]:
@@ -46,8 +46,9 @@ def _records(df) -> list[dict]:
 def export_cube_json(config: dict, parquet_path: Path = ds.FACT_PARQUET,
                      out_path: Path = REPORTS_DIR / "cube.json") -> dict:
     analysis = config.get("analysis", {})
-    levy = float(analysis.get("levy_per_litre_incl_vat", 0.30))
     con = ds.connect(parquet_path, int(analysis.get("active_window_days", 2)), config)
+    last_d = con.execute("SELECT MAX(d) FROM obs").fetchone()[0]
+    levy = ds.levy_in_force(analysis, last_d)
 
     latest = ds.latest_prices(con)
     spread = ds.sugar_tax_spread(con, levy)
@@ -58,6 +59,7 @@ def export_cube_json(config: dict, parquet_path: Path = ds.FACT_PARQUET,
     brands = ds.brand_summary(con)
     h2h = ds.head_to_head(con)
     calendar = ds.promo_calendar(con)
+    events = ds.event_study(con, config.get("events") or [], int(analysis.get("event_window_days", 14)))
     promo_share = con.execute(
         "SELECT AVG((mechanic <> 'none')::INT) FROM obs WHERE brand_family = 'Coca-Cola'").fetchone()[0]
     con.close()
@@ -70,7 +72,8 @@ def export_cube_json(config: dict, parquet_path: Path = ds.FACT_PARQUET,
         "last_run_date": counts["date"].iloc[-1] if len(counts) else None,
         "first_run_date": counts["date"].iloc[0] if len(counts) else None,
         "days_of_history": int(len(counts)),
-        "levy": {"per_litre_incl_vat": levy, "source": analysis.get("levy_source")},
+        "levy": {"per_litre_incl_vat": levy, "source": analysis.get("levy_source"),
+                 "schedule": analysis.get("levy_schedule") or []},
         "kpis": {
             "active_skus": int(len(latest)),
             "brands_tracked": int(len(brands)),
@@ -88,6 +91,7 @@ def export_cube_json(config: dict, parquet_path: Path = ds.FACT_PARQUET,
         "brand_summary": _records(brands),
         "head_to_head": _records(h2h),
         "promo_calendar": calendar,
+        "events": events,
     }
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")

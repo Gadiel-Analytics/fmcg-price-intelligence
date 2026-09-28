@@ -64,6 +64,15 @@ Edit `config/catalog.yaml` only:
 
 Keep `compliance.max_skus_per_run` above the expected SKU count, or later queries are skipped.
 
+## Events and levy changes
+
+- **New event** (e.g. a levy's effective date): add an entry under `events` in
+  `config/catalog.yaml` with `id`, `date`, `label`, `kind`, `detail`, `source`. The next run
+  studies it automatically.
+- **Levy rate change:** add a line to `analysis.levy_schedule` with the date it takes effect and
+  the new rate per litre incl. VAT (ex-VAT rate per hectolitre ÷ 100 × 1.23). Earlier dates keep
+  the old rate.
+
 ## After changing the dashboard
 
 GitHub Pages redeploys a minute or two after each push, and browsers cache `dashboard.html`.

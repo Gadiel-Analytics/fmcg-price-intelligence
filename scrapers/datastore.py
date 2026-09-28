@@ -411,6 +411,101 @@ def promo_calendar(con) -> dict:
     return {"start": first.isoformat(), "days": n, "skus": skus}
 
 
+def levy_in_force(analysis: dict, on_date) -> float:
+    """Levy per litre incl. VAT in force on a date (ISO string or date)."""
+    on = str(on_date)[:10] if on_date is not None else None
+    sched = sorted(analysis.get("levy_schedule") or [], key=lambda r: str(r["from"]))
+    rate = float(analysis.get("levy_per_litre_incl_vat", 0.30))
+    for r in sched:
+        if on is None or str(r["from"]) <= on:
+            rate = float(r["per_litre_incl_vat"])
+    return rate
+
+
+def event_study(con, events: list[dict], window: int = 14) -> list[dict]:
+    """
+    For each dated event: status relative to the latest run, and a before/after
+    comparison of regular prices (Coca-Cola full-sugar premium per matched pack)
+    and of the Pepsi price gap on price paid. Before the event date, the 'before'
+    window is the latest `window` days: the baseline the event will be compared
+    against. Descriptive only: a change after an event is consistent with a
+    response to it, not proof of one.
+    """
+    import datetime as _dt
+    last = con.execute("SELECT MAX(d) FROM obs").fetchone()[0]
+    first = con.execute("SELECT MIN(d) FROM obs").fetchone()[0]
+    out = []
+    if last is None:
+        return out
+    for ev in events or []:
+        d = _dt.date.fromisoformat(str(ev["date"]))
+        status = "upcoming" if d > last else ("in_window" if (last - d).days + 1 < window else "complete")
+        if status == "upcoming":
+            pre_s, pre_e, post_s, post_e = last - _dt.timedelta(days=window - 1), last, None, None
+        else:
+            pre_s, pre_e = d - _dt.timedelta(days=window), d - _dt.timedelta(days=1)
+            post_s, post_e = d, min(last, d + _dt.timedelta(days=window - 1))
+        pre_s = max(pre_s, first)
+
+        def spread(a, b):
+            if a is None:
+                return {}
+            rows = con.execute("""
+                SELECT format_key, ANY_VALUE(pack), ANY_VALUE(pack_count), ANY_VALUE(container),
+                       MIN(total_litres / pack_count),
+                       AVG(regular_ppl) FILTER (WHERE sugar_class = 'full') AS f,
+                       AVG(regular_ppl) FILTER (WHERE sugar_class = 'zero') AS z
+                FROM priced
+                WHERE brand_family = 'Coca-Cola' AND is_core AND d BETWEEN ? AND ?
+                  AND product_id IN (SELECT product_id FROM active)
+                GROUP BY format_key HAVING f IS NOT NULL AND z IS NOT NULL
+            """, [a, b]).fetchall()
+            return {r[0]: dict(pack=r[1], pack_count=r[2], container=r[3], ul=r[4], full=r[5], zero=r[6])
+                    for r in rows}
+
+        def gaps(a, b):
+            if a is None:
+                return {}
+            rows = con.execute("""
+                WITH x AS (
+                    SELECT format_key, sugar_tier, brand_family, AVG(effective_price) AS p
+                    FROM priced
+                    WHERE is_core AND brand_family IN ('Coca-Cola', 'Pepsi') AND d BETWEEN ? AND ?
+                      AND product_id IN (SELECT product_id FROM active)
+                    GROUP BY ALL)
+                SELECT h.format_key, h.sugar_tier, r.p / h.p - 1
+                FROM x h JOIN x r USING (format_key, sugar_tier)
+                WHERE h.brand_family = 'Coca-Cola' AND r.brand_family = 'Pepsi'
+            """, [a, b]).fetchall()
+            return {(r[0], r[1]): r[2] for r in rows}
+
+        pre, post = spread(pre_s, pre_e), spread(post_s, post_e)
+        rows = []
+        for fk, p in sorted(pre.items(), key=lambda kv: (kv[1]["pack_count"], kv[1]["ul"])):
+            q = post.get(fk)
+            prem_pre = p["full"] - p["zero"]
+            prem_post = (q["full"] - q["zero"]) if q else None
+            rows.append(dict(format_key=fk, pack=p["pack"], pack_count=p["pack_count"], container=p["container"],
+                             full_pre=round(p["full"], 3), zero_pre=round(p["zero"], 3), prem_pre=round(prem_pre, 3),
+                             full_post=round(q["full"], 3) if q else None,
+                             zero_post=round(q["zero"], 3) if q else None,
+                             prem_post=round(prem_post, 3) if q else None,
+                             delta=round(prem_post - prem_pre, 3) if q else None))
+        gpre, gpost = gaps(pre_s, pre_e), gaps(post_s, post_e)
+        rival = [dict(format_key=k[0], sugar_tier=k[1], gap_pre=round(v, 3),
+                      gap_post=round(gpost[k], 3) if k in gpost else None)
+                 for k, v in sorted(gpre.items())]
+        iso = lambda x: x.isoformat() if x else None
+        out.append(dict(id=ev.get("id"), date=d.isoformat(), label=ev.get("label"), kind=ev.get("kind"),
+                        detail=ev.get("detail"), source=ev.get("source"), status=status,
+                        days_to=(d - last).days, window=window,
+                        pre_start=iso(pre_s), pre_end=iso(pre_e), post_start=iso(post_s), post_end=iso(post_e),
+                        pre_days=(pre_e - pre_s).days + 1,
+                        post_days=((post_e - post_s).days + 1) if post_s else 0,
+                        rows=rows, rival=rival))
+    return out
+
+
 def daily_counts(con):
     """Distinct SKUs observed per day — the basis of the data-quality gate."""
     return _df(con, """
