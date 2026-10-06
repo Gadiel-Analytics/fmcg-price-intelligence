@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://gadiel-analytics.github.io/fmcg-price-intelligence/sitemap.xml

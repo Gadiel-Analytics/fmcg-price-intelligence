@@ -27,11 +27,13 @@ from scraper import (  # noqa: E402
     load_config, scrape, parse_cards, build_records, print_records, fetch_html,
 )
 import datastore as ds  # noqa: E402
+import narrative  # noqa: E402
+import sitebuilder as site_builder  # noqa: E402
 
 REPORTS_DIR = ROOT / "reports"
 FIXTURES_DIR = ROOT / "scrapers" / "fixtures"
 DRY_RUN_FIXTURE = FIXTURES_DIR / "supervalu_search_synthetic.html"
-CUBE_SCHEMA_VERSION = 6
+CUBE_SCHEMA_VERSION = 7
 
 
 def _records(df) -> list[dict]:
@@ -44,7 +46,10 @@ def _records(df) -> list[dict]:
 
 
 def export_cube_json(config: dict, parquet_path: Path = ds.FACT_PARQUET,
-                     out_path: Path = REPORTS_DIR / "cube.json") -> dict:
+                     out_path: Path = REPORTS_DIR / "cube.json", build_site: bool | None = None) -> dict:
+    # Pages are rebuilt only when writing the real cube, so tests and previews never touch them.
+    if build_site is None:
+        build_site = Path(out_path).resolve() == (REPORTS_DIR / "cube.json").resolve()
     analysis = config.get("analysis", {})
     con = ds.connect(parquet_path, int(analysis.get("active_window_days", 2)), config)
     last_d = con.execute("SELECT MAX(d) FROM obs").fetchone()[0]
@@ -95,8 +100,11 @@ def export_cube_json(config: dict, parquet_path: Path = ds.FACT_PARQUET,
         "events": events,
         "change_feed": feed,
     }
+    payload["narrative"] = narrative.build(payload)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    if build_site and config.get("site"):
+        site_builder.build(config, payload)
     return {"path": str(out_path), "latest_rows": len(payload["latest"])}
 
 

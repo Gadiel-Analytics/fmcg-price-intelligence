@@ -162,3 +162,77 @@ compliance:
   request_delay_seconds: [3, 7]
   max_skus_per_run: 200         # hard cap across all queries in one run
   user_agent: "GadielAnalytics-PriceIntel/0.2 (portfolio research; +github.com/Gadiel-Analytics)"
+
+# =============================================================================
+# Public site: pages generated on every run from site/*.html
+# =============================================================================
+site:
+  # Where the pages are served. Switch to "https://fmcg.gadielanalytics.com" only
+  # after the custom domain is live (DEPLOYMENT.md, "Custom domain"); the next run
+  # rewrites canonical URLs, structured data and the sitemap.
+  base_url: "https://gadiel-analytics.github.io/fmcg-price-intelligence"
+  case_study_published: "2026-10-06"
+  # Identity, as stated on gadielanalytics.com and theanalyticssystem.com.
+  author:
+    name: "Gadiel Guadarrama"
+    honorific_suffix: "M.Sc."
+    job_title: "Analytics, data science and AI strategy leader"
+    description: >-
+      Analytics, data science and AI strategy leader whose work focuses on the design of decision
+      systems, structural metrics and enterprise data architectures. More than a decade of enterprise
+      experience, including commercial-analytics work inside one of the world's largest FMCG
+      beverage ecosystems and enterprise analytics across finance and insurance. Founder of Gadiel
+      Analytics and author of The Analytics System.
+    url: "https://gadielanalytics.com/about/"
+    image: "https://gadielanalytics.com/assets/images/author-Gadiel-Guadarrama.png"
+    email: "hello@gadielanalytics.com"
+    country: "IE"
+    # Pages that are about this person. Brand channels (LinkedIn company, X, GitHub) sit on the
+    # organization below. No personal social profiles, by choice.
+    same_as:
+      - "https://gadielanalytics.com/about/"
+      - "https://theanalyticssystem.com/#author"
+    # Completed degrees only; the M.Sc. in Computer Science & AI (University of Galway) is in progress.
+    alumni_of:
+      - "UCD Michael Smurfit Graduate Business School"
+      - "EGADE Business School, Tecnológico de Monterrey"
+      - "Tecnológico de Monterrey"
+    knows_about:
+      - "Decision intelligence"
+      - "Decision-system architecture"
+      - "Revenue growth management"
+      - "Pricing analytics"
+      - "Price-pack architecture"
+      - "Promotion analytics"
+      - "Commercial analytics"
+      - "Data science"
+      - "Analytics engineering"
+      - "Enterprise AI"
+      - "Data governance"
+  organization:
+    name: "Gadiel Analytics"
+    description: "Decision intelligence and enterprise AI advisory by Gadiel Guadarrama."
+    url: "https://gadielanalytics.com/"
+    consulting_url: "https://gadielanalytics.com/consulting/"
+    same_as:
+      - "https://www.linkedin.com/company/gadielanalytics"
+      - "https://x.com/gadielanalytics"
+      - "https://github.com/Gadiel-Analytics"
+  book:
+    name: "The Analytics System"
+    subtitle: "Designing Data Foundations, Metrics, and AI for Better Business Decisions"
+    url: "https://theanalyticssystem.com/"
+    image: "https://theanalyticssystem.com/assets/images/og-image.jpg"
+    date_published: "2026-10-20"
+    isbn_paperback: "978-1-0666557-1-7"
+    isbn_ebook: "978-1-0666557-2-4"
+    same_as:
+      - "https://www.amazon.com/dp/B0HJ3Z59ZB"
+      - "https://www.goodreads.com/book/show/258541742-the-analytics-system"
+    publisher:
+      name: "Wyckham House"
+      locality: "Dublin"
+      country: "IE"
+      same_as:
+        - "https://www.instagram.com/wyckhamhouse"
+  repository: "https://github.com/Gadiel-Analytics/fmcg-price-intelligence"

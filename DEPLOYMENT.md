@@ -3,7 +3,9 @@
 The pipeline is deployed and running daily. This runbook covers the routine operations.
 
 Repository: `https://github.com/Gadiel-Analytics/fmcg-price-intelligence`
+Case study: `https://gadiel-analytics.github.io/fmcg-price-intelligence/`
 Dashboard: `https://gadiel-analytics.github.io/fmcg-price-intelligence/reports/dashboard.html`
+(after the custom domain switch: `https://fmcg.gadielanalytics.com/` and `/reports/dashboard.html`)
 
 ---
 
@@ -11,7 +13,7 @@ Dashboard: `https://gadiel-analytics.github.io/fmcg-price-intelligence/reports/d
 
 `.github/workflows/daily-scrape.yml` runs at 08:00 UTC (GitHub may start scheduled jobs later
 than that). Steps: offline tests → live scrape → quality gate → idempotent ingest → cube export →
-commit of `data/` and `reports/cube.json`.
+commit of `data/`, `reports/` (cube and generated dashboard), `index.html`, `sitemap.xml` and `robots.txt`.
 
 A red run in the Actions tab means one of:
 
@@ -34,9 +36,9 @@ replaces that day's rows instead of duplicating them.
 pip install -r requirements-dev.txt
 python -m pytest -q          # offline tests
 python run.py --dry-run      # parse the bundled fixture; no network, no writes
-python run.py --export-only  # rebuild reports/cube.json from data/fmcg_prices.parquet
+python run.py --export-only  # rebuild the cube and all pages from data/fmcg_prices.parquet
 python run.py --capture-fixture   # save one live search page to scrapers/fixtures/
-python run.py                # full live run (writes data/ and reports/cube.json)
+python run.py                # full live run (writes data/, the cube and the pages)
 ```
 
 ## Refreshing the parser fixture
@@ -75,6 +77,85 @@ Keep `compliance.max_skus_per_run` above the expected SKU count, or later querie
   the new rate per litre incl. VAT (ex-VAT rate per hectolitre ÷ 100 × 1.23). Earlier dates keep
   the old rate.
 
+## Editing the pages
+
+Edit the templates in `site/` (`site/dashboard.html`, `site/index.html`), never the generated
+`reports/dashboard.html` or `index.html`: those are rewritten on every run. Wording of findings
+lives in `scrapers/narrative.py`; run `python -m pytest -q` after changing it (one test rejects
+causal language). `python run.py --export-only` rebuilds everything locally.
+
+## Custom domain (fmcg.gadielanalytics.com)
+
+Order matters: verify first, so nobody else can claim the subdomain, and switch `base_url` last,
+so canonical URLs never point at an address that does not answer yet.
+
+1. **Verify the domain for the organisation.** GitHub → organisation **Gadiel-Analytics** →
+   Settings → Pages → *Add a domain* → `gadielanalytics.com`. GitHub shows a TXT record
+   (named like `_github-pages-challenge-Gadiel-Analytics`; copy name and value exactly as shown).
+   Add it at your DNS provider, then press *Verify*. This protects every subdomain of gadielanalytics.com from takeover.
+2. **Point the subdomain.** At your DNS provider add a `CNAME` record: name `fmcg`, value
+   `gadiel-analytics.github.io` (no repository name, no `https://`). Leave the TTL at its default.
+   **On Cloudflare** (where gadielanalytics.com is served), set *Proxy status* to **DNS only**
+   (grey cloud): GitHub can only issue the HTTPS certificate when it answers the subdomain itself.
+3. **Attach it to the repository.** Repository → Settings → Pages → *Custom domain* →
+   `fmcg.gadielanalytics.com` → Save. GitHub commits a `CNAME` file and checks DNS; wait for the
+   green "DNS check successful" (minutes to an hour).
+4. **Enforce HTTPS** on the same page once the certificate is issued (up to 24 hours; the box is
+   greyed out until then).
+5. **Switch the canonical address.** Set `site.base_url` in `config/catalog.yaml` to
+   `https://fmcg.gadielanalytics.com`, update the two URLs at the top of `README.md` and
+   `url:` in `CITATION.cff`, commit, push, and run the workflow. Old `github.io` links redirect
+   automatically.
+
+To roll back: remove the custom domain in Settings → Pages and restore `site.base_url`.
+
+## Search engines
+
+- **Google Search Console** → *Add property* → **Domain** → `gadielanalytics.com` → verify with
+  the TXT record it shows (one property covers the main site and every subdomain). Then
+  *Sitemaps* → submit `https://fmcg.gadielanalytics.com/sitemap.xml` (or the github.io address
+  before the switch), and *URL inspection* → *Request indexing* for the case study and dashboard.
+- **Bing Webmaster Tools** → *Import from Google Search Console*. Bing also feeds several
+  AI answer engines.
+- Check progress under *Performance* → *Queries* for "gadiel guadarrama", "gadiel analytics" and
+  "the analytics system". Expect weeks, not days.
+
+## Repository settings that help discovery
+
+Repository → ⚙ next to *About*:
+
+- **Description:** `Daily Coca-Cola vs Pepsi shelf-price intelligence for Ireland: price-pack
+  architecture, promotions and the sugar levy. By Gadiel Guadarrama, Gadiel Analytics.`
+- **Website:** the case-study URL.
+
+On **gadielanalytics.com**, point the FMCG Price Intelligence card on the home and Work pages
+at the case study (`https://fmcg.gadielanalytics.com/`) once the domain is live.
+- **Topics:** `revenue-growth-management`, `pricing-analytics`, `price-intelligence`,
+  `competitive-intelligence`, `price-pack-architecture`, `fmcg`, `cpg`, `data-science`,
+  `analytics-engineering`, `decision-intelligence`, `duckdb`, `python`, `d3js`,
+  `github-actions`, `ireland`, `sugar-tax`.
+
+Settings → General → **Social preview** → upload `reports/og-image.png`.
+
+With the GitHub CLI, the first two steps are:
+
+```bash
+gh repo edit Gadiel-Analytics/fmcg-price-intelligence \
+  --description "Daily Coca-Cola vs Pepsi shelf-price intelligence for Ireland: price-pack architecture, promotions and the sugar levy. By Gadiel Guadarrama, Gadiel Analytics." \
+  --homepage "https://gadiel-analytics.github.io/fmcg-price-intelligence/" \
+  --add-topic revenue-growth-management,pricing-analytics,price-intelligence,competitive-intelligence,price-pack-architecture,fmcg,cpg,data-science,analytics-engineering,decision-intelligence,duckdb,python,d3js,github-actions,ireland,sugar-tax
+```
+
+**Releases** give each milestone a dated, indexable page:
+
+```bash
+gh release create v1.0.0 --title "v1.0.0 — Consulting-grade release" \
+  --notes "Daily shelf-price intelligence for Coca-Cola and competitors in Ireland. See CHANGELOG.md for F0–F5."
+```
+
+**Commit identity:** GitHub → Settings → Emails: add and verify every address you commit with, so
+every commit links to your profile.
+
 ## After changing the dashboard
 
 GitHub Pages redeploys a minute or two after each push, and browsers cache `dashboard.html`.
@@ -83,5 +164,6 @@ a change; `cube.json` is always fetched fresh.
 
 ## GitHub Pages
 
-Settings → Pages → Deploy from a branch → `main`, folder `/ (root)`. The dashboard reads
-`reports/cube.json` from the same folder, so each daily commit updates it.
+Settings → Pages → Deploy from a branch → `main`, folder `/ (root)`. The case study is served at
+the root (`index.html`) and the dashboard at `reports/dashboard.html`; `.nojekyll` serves files
+as they are. Each daily commit updates the cube and the pages.

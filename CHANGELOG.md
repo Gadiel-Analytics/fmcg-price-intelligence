@@ -1,5 +1,27 @@
 # Changelog
 
+## F5 — Discoverability (2026-10-06)
+
+- **Findings in the HTML.** Every headline, KPI, key message and exhibit title is generated once,
+  in `scrapers/narrative.py` (a Python port of the dashboard logic, matched string for string on
+  four cubes), stored as `narrative` in the cube (schema v7) and written into the pages on every
+  run. Readers without JavaScript and search engines now see the findings instead of a loading
+  message; the Summary is visible without JavaScript.
+- **Case study page** at the site root (`index.html`): what the data shows, why it matters for
+  revenue growth management, how it works, what it does not show, and the author.
+- **Structured data** on both pages (JSON-LD): `Person` (official bio, completed degrees,
+  areas of expertise), `Organization` (Gadiel Analytics, with its LinkedIn company page, X and
+  GitHub), `Book` (*The Analytics System*: subtitle, Wyckham House, ISBNs, publication date,
+  Amazon and Goodreads), `Dataset`, `WebSite`, and `Article` / `WebPage`. Identity follows
+  gadielanalytics.com and theanalyticssystem.com; no personal social profiles. Titles and
+  descriptions lead with the author and brand.
+- **Crawl hints:** `sitemap.xml`, `robots.txt`, `.nojekyll`; canonical URLs from one setting,
+  `site.base_url`, ready for a custom domain.
+- **`CITATION.cff`** for GitHub's "Cite this repository".
+- **Guardrail test:** generated text may not use causal language ("because", "driven by", …).
+- Templates moved to `site/`; `reports/dashboard.html` and `index.html` are now generated, and the
+  daily workflow commits them.
+
 ## F4b — What changed, and a cleaner Budget read (2026-10-06)
 
 ### What changed

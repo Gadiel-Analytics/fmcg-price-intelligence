@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you refer to this work, please cite it as below."
+type: software
+title: "FMCG Price Intelligence: daily shelf-price intelligence for soft drinks in Ireland"
+abstract: >-
+  A daily, automated read of SuperValu Ireland shelf prices for Coca-Cola, Pepsi and other soft-drink
+  brands that separates regular from promotional prices, normalises price per litre, benchmarks the
+  full-sugar premium against Ireland's Sugar Sweetened Drinks Tax and compares brands pack for pack.
+authors:
+  - given-names: Gadiel
+    family-names: Guadarrama
+    affiliation: Gadiel Analytics
+    website: "https://gadielanalytics.com/about/"
+    email: hello@gadielanalytics.com
+repository-code: "https://github.com/Gadiel-Analytics/fmcg-price-intelligence"
+url: "https://gadiel-analytics.github.io/fmcg-price-intelligence/"
+date-released: "2026-10-06"
+keywords:
+  - revenue growth management
+  - pricing analytics
+  - price intelligence
+  - price-pack architecture
+  - sugar tax
+  - FMCG
+  - data science

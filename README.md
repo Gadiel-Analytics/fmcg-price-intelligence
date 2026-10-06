@@ -1,7 +1,7 @@
-# FMCG Price Intelligence — SuperValu Ireland · Coca-Cola and competitors
+# FMCG Price Intelligence — Coca-Cola vs Pepsi shelf-price intelligence, Ireland
 
 **A [Gadiel Analytics](https://gadielanalytics.com/) product** — designed, built and maintained by
-**Gadiel Guadarrama, M.Sc.**, Decision-System Architect and author of
+**Gadiel Guadarrama, M.Sc.**, analytics, data science and AI strategy leader and author of
 [*The Analytics System*](https://theanalyticssystem.com/). Part of the
 [Gadiel Analytics portfolio](https://gadielanalytics.com/work/) (Commercial Analytics & RGM).
 
@@ -11,8 +11,8 @@
 > full-sugar Coca-Cola premium against Ireland's **Sugar-Sweetened Drinks Tax**, and compares
 > Coca-Cola with its competitors like-for-like per litre.
 
-**Live dashboard:** https://gadiel-analytics.github.io/fmcg-price-intelligence/reports/dashboard.html
-· **Author:** [@GadielAnalytics](https://github.com/Gadiel-Analytics)
+**Case study:** https://gadiel-analytics.github.io/fmcg-price-intelligence/
+· **Live dashboard:** https://gadiel-analytics.github.io/fmcg-price-intelligence/reports/dashboard.html
 · **Website:** https://gadielanalytics.com/
 · **Contact:** hello@gadielanalytics.com
 
@@ -80,8 +80,24 @@ A consulting-style report in six sections, each addressable by link (e.g. `dashb
 | **Methodology** | Collection, pricing model, limits, compliance, ownership |
 
 Every exhibit has an action title stating its finding, a source line, and a data table where the
-chart carries exact values. Titles are generated from the data with explicit guards, so they
-change with the evidence and never overstate it.
+chart carries exact values. Titles, KPIs and key messages are generated once, in
+`scrapers/narrative.py`, with explicit guards and a test that rejects causal language; they are
+written into the HTML on every run, so readers without JavaScript, search engines and link
+previews see the same findings as the dashboard.
+
+## Public site
+
+| Page | URL path | Built from |
+|---|---|---|
+| Case study (article) | `/` | `site/index.html` |
+| Live dashboard | `/reports/dashboard.html` | `site/dashboard.html` |
+| Sitemap, robots | `/sitemap.xml`, `/robots.txt` | `scrapers/sitebuilder.py` |
+
+Pages are rebuilt on every daily run with the day's findings, canonical URLs and structured data
+(JSON-LD: the author as `Person`, Gadiel Analytics as `Organization`, *The Analytics System* as
+`Book`, the price history as `Dataset`, and each page). The public address is set in one place,
+`site.base_url` in `config/catalog.yaml`; moving to a custom domain is documented in
+[`DEPLOYMENT.md`](DEPLOYMENT.md).
 
 ## Architecture
 
@@ -96,7 +112,11 @@ GitHub Actions (daily cron) ── pytest (offline) ──┐
         │                                                   │
         │                        sql/01_observations.sql  obs → priced → active
         ▼                                                   ▼
-  reports/cube.json  ──►  reports/dashboard.html  (D3)  ──►  GitHub Pages (public)
+  reports/cube.json  ──►  narrative.py (findings, guarded)  ──►  sitebuilder.py
+                                                                   │
+              index.html (case study) · reports/dashboard.html (D3) · sitemap.xml
+                                                                   ▼
+                                                         GitHub Pages (public)
 ```
 
 | Layer | Tool | Why |
@@ -105,6 +125,7 @@ GitHub Actions (daily cron) ── pytest (offline) ──┐
 | Ingestion | curl_cffi + BeautifulSoup | Browser-grade TLS fingerprint over lightweight parsing |
 | Storage / OLAP | DuckDB + Parquet | In-process analytical SQL, zero server, git-versioned history |
 | Modelling | Plain SQL views | Derivations applied retroactively to the full history; no framework overhead |
+| Narrative | Python, tested | One source for every finding; no causal language; pre-rendered for search |
 | Visualisation | D3 + GitHub Pages | Static, fast, fully controllable design |
 
 ### Pricing model
@@ -135,13 +156,20 @@ documented here rather than hidden.
 ## Repository layout
 
 ```
-config/catalog.yaml        # queries, brands, analysis and quality settings — edit here, not in code
+config/catalog.yaml        # queries, brands, pairs, events, analysis, quality and site settings
 scrapers/scraper.py        # fetch + parse → PriceRecord (pack-aware €/litre normalisation)
-scrapers/datastore.py      # idempotent ingest, brand map, named cube queries (incl. competition)
-sql/01_observations.sql    # obs → priced → active views (promo parsing, regular-price inference)
+scrapers/datastore.py      # idempotent ingest, brand map, cube queries, change feed, event study
+scrapers/narrative.py      # every headline, KPI and exhibit title, with guards
+scrapers/sitebuilder.py    # renders the public pages, JSON-LD, sitemap and robots
+sql/01_observations.sql    # obs → priced → active views (offer parsing, regular-price inference)
+site/                      # page templates — edit these, not the generated pages
 run.py                     # entrypoint: live | --dry-run | --export-only | --capture-fixture
-tests/                     # offline tests (parser, brand filter, ingest, pricing model)
-reports/dashboard.html     # D3 dashboard (reads cube.json)
+tests/                     # offline tests (parser, ingest, pricing model, narrative, site)
+index.html                 # generated: case study
+reports/dashboard.html     # generated: D3 dashboard (reads cube.json)
+reports/cube.json          # generated: analytical cube
+sitemap.xml, robots.txt    # generated: crawl hints
+CITATION.cff               # how to cite this work
 .github/workflows/         # daily cron, gated by tests
 COMPLIANCE.md              # compliance-by-design statement
 COPYRIGHT.md               # all rights reserved; source available for viewing and evaluation
@@ -161,9 +189,22 @@ python run.py --export-only  # rebuild reports/cube.json from the committed hist
 
 ## Author and ownership
 
-© 2026 Gadiel Guadarrama · Gadiel Analytics. Designed, built and maintained by Gadiel Guadarrama.
-For pricing, RGM and decision-system advisory: hello@gadielanalytics.com ·
+**Gadiel Guadarrama, M.Sc.** is an analytics, data science and AI strategy leader whose work
+focuses on the design of decision systems, structural metrics and enterprise data architectures.
+He brings more than a decade of enterprise experience, including commercial-analytics work inside
+one of the world's largest FMCG beverage ecosystems and enterprise analytics across finance and
+insurance. He is the founder of [Gadiel Analytics](https://gadielanalytics.com/) (decision
+intelligence and enterprise AI advisory) and the author of
+[*The Analytics System: Designing Data Foundations, Metrics, and AI for Better Business Decisions*](https://theanalyticssystem.com/)
+(Wyckham House, 2026).
+
+For decision intelligence, pricing and RGM advisory: hello@gadielanalytics.com ·
+[Consulting](https://gadielanalytics.com/consulting/) ·
 [LinkedIn](https://www.linkedin.com/company/gadielanalytics) · [X @gadielAnalytics](https://x.com/gadielanalytics).
+
+**Citing this work:** see [`CITATION.cff`](CITATION.cff) (GitHub's "Cite this repository" button).
+
+© 2026 Gadiel Guadarrama · Gadiel Analytics.
 
 This repository is public so the work can be read and evaluated, not so it can be reused. No
 license is granted to copy, modify, distribute or sell the source code or substantial portions of
@@ -188,10 +229,12 @@ provenance logged. Full statement in [`COMPLIANCE.md`](COMPLIANCE.md). Not legal
 - [x] F0 Hardening: correct current prices, promotion model, levy benchmark, tests, quality gate
 - [x] F2 Competitive scope: Pepsi, Sprite, 7UP, Fanta, Club, Red Bull, Monster
 - [x] F3 Consulting-style redesign: six sections, nine exhibits, head-to-head competition
-- [ ] F3 Second retailer
 - [x] F4a Budget watch: dated events, automatic before/after study, levy by date
 - [x] F4b What changed: weekly change feed, confounder-aware Budget read, parser fixes
 - [ ] F4c EDLP vs high-low by SKU (from ~25 Oct, four weeks of competitor history); deposit-inclusive prices
-- [ ] F5 In-browser SQL over the Parquet history; weekly brief with claim-strength guardrails
+- [x] F5 Discoverability: pre-rendered findings, case study, structured data, sitemap, citation
+- [ ] F6 In-browser SQL over the Parquet history; weekly brief with claim-strength guardrails
+- [ ] F7 Launch: custom domain, public post
+- [ ] Second retailer (feasibility spike first)
 
 Details and gates: [`docs/PROJECT_CONTROL.md`](docs/PROJECT_CONTROL.md).

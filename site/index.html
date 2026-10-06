@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+{{head}}
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --ink:#0D1C2E; --sec:#475467; --mut:#667085; --rule:#E4E7EC; --surf:#F7F8FA;
+  --ind:#4658FF; --ind-2:#8C97FF; --ind-l:#DCE0FF; --grey:#98A2B3; --grey-l:#EAECF0;
+  --amber:#DC6803; --focus:#78B9FF; --navy:#0D1C2E;
+  --font:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);color:var(--ink);background:#fff;font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:var(--ind)}
+.num,.kv,.tnum{font-variant-numeric:tabular-nums}
+.brandbar{background:var(--navy);color:#fff}
+.brandbar-inner{max-width:1200px;margin:0 auto;padding:12px 40px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px;color:inherit;text-decoration:none;margin-right:auto}
+.brand svg{width:38px;height:38px;flex:none;display:block}
+.brand-name{font-weight:600;font-size:15px;line-height:1.25} .brand-by{font-size:12.5px;color:#AAB6CC}
+.brand-nav{display:flex;gap:22px;flex-wrap:wrap;font-size:14px;align-items:center}
+.brand-nav a{color:#AAB6CC;text-decoration:none} .brand-nav a:hover{color:#fff}
+.brand-nav .source{border:1px solid #33496F;border-radius:6px;padding:4px 12px;color:#fff}
+a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible{outline:2px solid var(--focus);outline-offset:3px;border-radius:3px}
+.tabs-wrap{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--rule)}
+.tabs{max-width:1200px;margin:0 auto;padding:0 40px;display:flex;gap:30px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{appearance:none;background:none;border:0;border-bottom:2px solid transparent;padding:16px 0 14px;font:500 15px var(--font);color:var(--mut);cursor:pointer;white-space:nowrap}
+.tab:hover{color:var(--ink)} .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ind)}
+main{max-width:1200px;margin:0 auto;padding:44px 40px 24px}
+[role="tabpanel"]:focus{outline:none}
+.kicker{font-size:14px;color:var(--mut);margin-bottom:14px}
+h1{font-size:clamp(28px,3.4vw,40px);line-height:1.16;font-weight:700;letter-spacing:-.02em;max-width:28ch}
+.dek{font-size:18px;color:var(--sec);margin-top:16px;max-width:68ch}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin:36px 0 8px;border-top:2px solid var(--ink)}
+.k{padding:18px 22px 20px 22px;border-right:1px solid var(--rule)} .k:first-child{padding-left:0} .k:last-child{border-right:0}
+.kv{font-size:clamp(24px,2.6vw,34px);font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.kl{font-size:14.5px;color:var(--sec);margin-top:8px;line-height:1.45}
+.h2{font-size:22px;font-weight:600;letter-spacing:-.01em;margin:48px 0 6px}
+.messages{list-style:none;margin-top:14px;border-top:1px solid var(--rule)}
+.messages li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:baseline;padding:16px 0;border-bottom:1px solid var(--rule)}
+.messages p{font-size:17px;font-weight:500;line-height:1.45;max-width:78ch}
+.messages a{font-size:14px;font-weight:500;white-space:nowrap;text-decoration:none}
+.messages a:hover{text-decoration:underline}
+.changes{margin-top:14px}
+.changes td.kind{white-space:nowrap;font-weight:500}
+.changes h3.sub{font-size:16px;font-weight:600;margin:20px 0 4px}
+.outcome{font-size:15px;margin:-6px 0 16px;padding:10px 14px;border:1px solid var(--rule);border-radius:6px;max-width:82ch}
+.outcome strong{font-weight:600}
+.sec-head h2{font-size:28px;font-weight:700;letter-spacing:-.015em}
+.sec-head p{font-size:17px;color:var(--sec);margin-top:8px;max-width:72ch}
+.exhibit{margin-top:52px}
+.exhibit:first-of-type{margin-top:40px}
+.exn{font-size:13.5px;font-weight:600;color:var(--ind);margin-bottom:6px}
+.ext{font-size:clamp(20px,2vw,24px);font-weight:600;letter-spacing:-.01em;line-height:1.3;max-width:56ch}
+.exs{font-size:15px;color:var(--sec);margin:8px 0 18px;max-width:82ch}
+.legend{display:flex;flex-wrap:wrap;gap:8px 22px;font-size:14px;color:var(--sec);margin-bottom:10px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:7px;vertical-align:-1px}
+.legend i.sq{border-radius:3px} .legend i.ln{width:18px;height:0;border-top:2px solid;border-radius:0;vertical-align:4px}
+.legend i.dash{width:18px;height:0;border-top:2px dashed;border-radius:0;vertical-align:4px}
+.chart{width:100%} .chart svg{display:block;overflow:visible}
+.ax{font-size:13px;fill:var(--mut)} .axh{font-size:13px;fill:var(--sec);font-weight:600}
+.lab{font-size:14.5px;fill:var(--ink);font-weight:500} .val{font-size:14.5px;font-weight:600;fill:var(--ink)} .sm{font-size:13.5px;fill:var(--sec)}
+.grid line{stroke:var(--rule)} .grid path{display:none}
+.sowhat{background:var(--surf);border-left:3px solid var(--ind);padding:14px 18px;margin-top:18px;font-size:15.5px;max-width:92ch}
+.sowhat strong{font-weight:600}
+.source{font-size:13px;color:var(--mut);border-top:1px solid var(--rule);padding-top:10px;margin-top:12px}
+details.data{margin-top:12px}
+details.data summary{cursor:pointer;font-size:14px;font-weight:500;color:var(--ind);list-style:none;display:inline-block}
+details.data summary::-webkit-details-marker{display:none}
+details.data summary::before{content:"+ ";} details.data[open] summary::before{content:"− ";}
+.table-wrap{overflow-x:auto;margin-top:10px}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th{text-align:left;font-weight:600;font-size:13px;color:var(--sec);padding:10px 12px;border-bottom:2px solid var(--ink);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+td.num,td.tnum{font-variant-numeric:tabular-nums}
+th.num,td.num{text-align:right} td.muted{color:var(--mut)}
+.tag{display:inline-block;font-size:12.5px;padding:1px 8px;border-radius:999px;background:var(--grey-l);color:var(--sec);margin:0 4px 3px 0;white-space:nowrap}
+.tag.r{background:#FEF0C7;color:#93370D}
+.controls{display:flex;gap:10px;align-items:center;font-size:14px;color:var(--sec);margin-bottom:12px}
+select{font:inherit;color:var(--ink);background:#fff;border:1px solid var(--rule);border-radius:6px;padding:6px 10px}
+.empty{padding:28px;background:var(--surf);color:var(--sec);border-radius:6px;font-size:15px}
+.note{font-size:14px;color:var(--sec);margin-top:10px;max-width:82ch}
+.method h3{font-size:19px;font-weight:600;margin:30px 0 8px}
+.method p,.method li{font-size:16px;max-width:74ch;margin-bottom:10px} .method ul{padding-left:20px}
+.foot-wrap{max-width:1200px;margin:0 auto;padding:0 40px 64px}
+.byline{margin-top:56px;padding-top:24px;border-top:1px solid var(--rule);font-size:15px;color:var(--sec)}
+.byline strong{color:var(--ink);font-weight:600}
+footer{padding-top:14px;font-size:13.5px;color:var(--mut)}
+footer a{color:var(--sec)}
+@media (max-width:860px){
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .k:nth-child(2){border-right:0} .k:nth-child(3){padding-left:0} .k:nth-child(n+3){border-top:1px solid var(--rule)}
+}
+@media (max-width:640px){
+  .brandbar-inner,.tabs,main,.foot-wrap{padding-left:20px;padding-right:20px}
+  .brand-nav a:not(.source){display:none}
+  .tabs{gap:22px;-webkit-mask-image:linear-gradient(to right,#000 85%,transparent);mask-image:linear-gradient(to right,#000 85%,transparent)}
+  .messages li{grid-template-columns:1fr;gap:6px}
+  .changes thead{display:none}
+  .changes table,.changes tbody{display:block}
+  .changes tr{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;padding:12px 0;border-bottom:1px solid var(--rule)}
+  .changes td{border:0;padding:0}
+  .changes td:nth-child(2){font-weight:600}
+  .changes td.kind{grid-column:1/3;font-size:13.5px;color:var(--ind)}
+  .changes td:nth-child(4){grid-column:1/3;color:var(--sec)}
+  .changes td.num{display:none}
+  .dek{font-size:16.5px}
+}
+@media print{
+  .tabs-wrap,.brand-nav,details.data summary,.controls{display:none}
+  details.data[open] .table-wrap{display:block}
+  body{font-size:12pt} main{padding-top:20px}
+  .exhibit{break-inside:avoid}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+.article{max-width:760px}
+.article h2{font-size:24px;font-weight:700;letter-spacing:-.01em;margin:44px 0 10px}
+.article p{font-size:17.5px;line-height:1.7;color:#1d2939;margin-bottom:16px}
+.article ul{padding-left:22px;margin-bottom:16px} .article li{font-size:17px;line-height:1.65;margin-bottom:8px}
+.article ul.messages{padding-left:0;margin-bottom:0} .article .messages li{margin-bottom:0}
+.byline-top{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14.5px;color:var(--sec);margin-top:18px}
+.byline-top strong{color:var(--ink);font-weight:600}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin:26px 0 8px}
+.btn{display:inline-block;padding:11px 18px;border-radius:8px;font-weight:600;font-size:15px;text-decoration:none}
+.btn.primary{background:var(--ind);color:#fff} .btn.secondary{border:1px solid var(--rule);color:var(--ink)}
+.btn:hover{filter:brightness(1.05)}
+.answer{border-left:3px solid var(--ind);background:var(--surf);padding:16px 20px;font-size:19px;font-weight:600;line-height:1.45;margin:14px 0 6px;max-width:760px}
+.author-box{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:start;border:1px solid var(--rule);border-radius:10px;padding:22px;margin-top:20px;max-width:760px}
+.author-box svg{width:56px;height:56px} .author-box h3{font-size:18px;font-weight:600;margin-bottom:6px}
+.author-box p{font-size:16px;line-height:1.6;margin-bottom:10px}
+@media (max-width:640px){.author-box{grid-template-columns:1fr} .article p{font-size:16.5px}}
+</style>
+</head>
+<body>
+<header class="brandbar">
+<div class="brandbar-inner">
+<a class="brand" href="https://gadielanalytics.com/" aria-label="Gadiel Analytics home">
+<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false"><defs><linearGradient id="ga-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#16a3ff"/><stop offset="52%" stop-color="#4658ff"/><stop offset="100%" stop-color="#9b3dff"/></linearGradient></defs><rect x="1.5" y="1.5" width="61" height="61" rx="13" fill="none" stroke="#33496f" stroke-width="2"/><text x="32" y="41" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="26" font-weight="700" letter-spacing="-1" fill="url(#ga-g)">GA</text><rect x="18" y="46" width="28" height="3" rx="1.5" fill="#33496f"/></svg>
+<span><span class="brand-name">FMCG Price Intelligence</span><br/><span class="brand-by">by Gadiel Analytics</span></span>
+</a>
+<nav class="brand-nav" aria-label="Gadiel Analytics">
+<a href="reports/dashboard.html">Dashboard</a>
+<a href="https://gadielanalytics.com/work/">Work</a>
+<a href="https://gadielanalytics.com/consulting/">Consulting</a>
+<a href="https://gadielanalytics.com/about/">About</a>
+<a class="source" href="https://github.com/Gadiel-Analytics/fmcg-price-intelligence">Source</a>
+</nav>
+</div>
+</header>
+<main>
+<article>
+<p class="kicker">Case study · Revenue growth management · Pricing analytics</p>
+<h1>How Coca-Cola and Pepsi price soft drinks in Ireland</h1>
+<p class="dek">A daily shelf-price study of SuperValu Ireland: price-pack architecture, promotions, Ireland's sugar levy and the price gap to Pepsi, recomputed from the data every day since June 2026.</p>
+<div class="byline-top"><span>By <strong>Gadiel Guadarrama, M.Sc.</strong> · Gadiel Analytics</span><span>Published {{published}}</span><span>Updated {{updated}}</span><span>7 min read</span></div>
+<div class="cta"><a class="btn primary" href="reports/dashboard.html">Open the live dashboard</a><a class="btn secondary" href="mailto:hello@gadielanalytics.com?subject=Pricing%20and%20RGM%20analytics">Discuss a pricing or RGM project</a></div>
+
+<h2 class="h2">The short answer</h2>
+<p class="answer">{{headline}}.</p>
+<div class="kpis">{{kpis_html}}</div>
+
+<div class="article">
+<h2>What the data shows today</h2>
+<p>These findings are regenerated on every daily run, with explicit rules on how strongly each one may be stated. Each links to the exhibit behind it.</p>
+<ul class="messages">{{messages_html}}</ul>
+
+<h2>Why this matters for revenue growth management</h2>
+<p>Revenue growth management works through four levers: price setting, pack and mix, promotion and trade investment. The shelf makes three of them visible from outside any company: the everyday price a shopper sees, the way price per litre steps down as packs get larger, and the promotions that sit on top. Trade investment stays invisible, and this study never claims to measure it.</p>
+<p>Ireland adds a policy lens. Drinks with eight grams of sugar or more per 100 ml carry a levy of about €0.30 per litre at the shelf, while Zero Sugar and diet ranges carry none. Comparing the full-sugar premium with the levy, pack by pack, shows how a brand prices its taxed and untaxed ranges. It is a benchmark rather than a measured pass-through: each pack's premium also reflects its own pricing strategy.</p>
+<p>The competitive read separates two kinds of gap. An everyday price gap is a positioning choice; a promotional gap is a tactical one. Many of the competitor discounts in this data require SuperValu's Real Rewards card, so the study keeps prices open to every shopper apart from Rewards prices and marks which comparisons depend on them.</p>
+<p>For a commercial team, the same daily read supports concrete decisions: a price-gap corridor to the main rival for each hero pack, a check that larger packs never cost more per litre than smaller ones, promotion planning against a calendar of rival activity, and a disciplined read of policy events such as the Budget, with every confounding promotion or range change flagged rather than mistaken for a response.</p>
+
+<h2>How it works</h2>
+<ul>
+<li><strong>Collection:</strong> once a day, an automated job reads SuperValu Ireland's public search results for cola, lemon-lime, orange and energy drinks, at human rate and without logging in. Nothing personal is collected.</li>
+<li><strong>Quality:</strong> a run that returns fewer than half the products of the past week is refused, so a broken page never enters the history; re-running a day replaces it.</li>
+<li><strong>Pricing model:</strong> regular and promotional prices are separated, every price is normalised per litre, and packs are matched like for like by size, count, container and sugar tier.</li>
+<li><strong>Narrative with guardrails:</strong> every headline is generated from the data with tested rules. Changes are reported, never attributed: a change after an event is described as a change, and a ratio to the levy as a benchmark.</li>
+<li><strong>Stack:</strong> Python, DuckDB and Parquet, versioned daily in git; GitHub Actions for orchestration; D3 for the exhibits. The infrastructure costs nothing to run.</li>
+</ul>
+
+<h2>What it does not show</h2>
+<p>Shelf prices are not sales. Without volumes there is no price elasticity and no promotional return on investment; the study is the shelf-side complement to scanner and shipment data, not a substitute for them. It covers one retailer, competitor history began on 27 September 2026, and prices are read from search results as a shopper would see them online.</p>
+
+<h2>About the author</h2>
+<div class="author-box">
+<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false"><defs><linearGradient id="ga-g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#16a3ff"/><stop offset="52%" stop-color="#4658ff"/><stop offset="100%" stop-color="#9b3dff"/></linearGradient></defs><rect x="1.5" y="1.5" width="61" height="61" rx="13" fill="none" stroke="#E4E7EC" stroke-width="2"/><text x="32" y="41" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="26" font-weight="700" letter-spacing="-1" fill="url(#ga-g2)">GA</text><rect x="18" y="46" width="28" height="3" rx="1.5" fill="#C9D0DB"/></svg>
+<div>
+<h3>Gadiel Guadarrama, M.Sc.</h3>
+<p>Analytics, data science and AI strategy leader whose work focuses on the design of decision systems, structural metrics and enterprise data architectures. More than a decade of enterprise experience, including commercial-analytics work inside one of the world's largest FMCG beverage ecosystems and enterprise analytics across finance and insurance.</p>
+<p>Founder of <a href="https://gadielanalytics.com/">Gadiel Analytics</a>, decision intelligence and enterprise AI advisory, including commercial analytics and revenue growth management. Author of <a href="https://theanalyticssystem.com/"><em>The Analytics System: Designing Data Foundations, Metrics, and AI for Better Business Decisions</em></a> (Wyckham House, 2026).</p>
+<p><a href="https://gadielanalytics.com/consulting/">Consulting</a> · <a href="https://gadielanalytics.com/about/">About</a> · <a href="https://theanalyticssystem.com/">The book</a> · <a href="https://www.linkedin.com/company/gadielanalytics">LinkedIn</a> · <a href="mailto:hello@gadielanalytics.com">hello@gadielanalytics.com</a></p>
+</div>
+</div>
+</div>
+</article>
+</main>
+<div class="foot-wrap">
+<section class="byline" aria-label="About the author">
+<strong>Built and maintained by Gadiel Guadarrama, M.Sc.</strong> — analytics, data science and AI strategy leader, founder of <a href="https://gadielanalytics.com/">Gadiel Analytics</a> and author of <a href="https://theanalyticssystem.com/"><em>The Analytics System</em></a>. For decision intelligence, pricing and revenue growth management advisory: <a href="mailto:hello@gadielanalytics.com?subject=FMCG%20Price%20Intelligence">hello@gadielanalytics.com</a>
+</section>
+<footer>
+<a href="https://gadielanalytics.com/">gadielanalytics.com</a> ·
+<a href="https://www.linkedin.com/company/gadielanalytics">LinkedIn</a> ·
+<a href="https://x.com/gadielanalytics">@gadielAnalytics</a> ·
+<a href="https://github.com/Gadiel-Analytics">GitHub</a><br/>
+© 2026 Gadiel Guadarrama · Gadiel Analytics. All rights reserved.
+</footer>
+</div>
+</body>
+</html>
