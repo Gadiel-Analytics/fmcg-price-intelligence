@@ -180,3 +180,50 @@ def test_event_study_after_event_measures_change(tmp_path):
     g = ev["rival"][0]
     assert g["gap_pre"] == pytest.approx(2.65 / 4.20 - 1, abs=0.001)
     assert g["gap_post"] == pytest.approx(2.65 / 4.60 - 1, abs=0.001)
+
+
+def test_multibuy_parser_case_and_euro(tmp_path):
+    p = tmp_path / "m.parquet"
+    ds.ingest([rec(1, "A", FULL, "full", 4.20, "2 FOR 6.75 COCA COLA 2LTR"),
+               rec(1, "B", ZERO, "zero", 3.40, "3 for 2"),
+               rec(1, "C", "Pepsi Max Can 4 Pack (330 ml)", "zero", 4.10, "3 for €10 Rewards Price",
+                   pack="330 ml", count=4, litres=1.32, container="Can", brand="Pepsi")], p)
+    rows = {r[0]: r[1:] for r in ds.connect(p, 2).execute(
+        "SELECT product_id, mechanic, offer, loyalty_gated, effective_price FROM priced").fetchall()}
+    assert rows["A"][:2] == ("multibuy", "2 for €6.75") and rows["A"][3] == pytest.approx(3.375)
+    assert rows["B"][0] == "badge"                     # "3 for 2" is never read as EUR 2
+    assert rows["C"][:3] == ("multibuy", "3 for €10.00 (Rewards)", True)
+
+
+def test_change_feed_normalises_offers_and_groups(tmp_path):
+    p = tmp_path / "f.parquet"
+    ds.ingest([rec(1, "Z1", ZERO, "zero", 3.40, "3 for €6.75"), rec(1, "Z2", ZERO.replace("Bottle", "Cherry Bottle"), "zero", 3.40, "3 for €6.75"),
+               rec(1, "PF", "Pepsi Regular Bottle (2 L)", "full", 2.65, brand="Pepsi")], p)
+    ds.ingest([rec(2, "Z1", ZERO, "zero", 3.40, "3 FOR 6.75 COCA COLA DIET / ZERO RANGE 2LTR"),
+               rec(2, "Z2", ZERO.replace("Bottle", "Cherry Bottle"), "zero", 3.40, "3 FOR 6.75 COCA COLA"),
+               rec(2, "PF", "Pepsi Regular Bottle (2 L)", "full", 2.65, brand="Pepsi")], p)
+    ds.ingest([rec(3, "Z1", ZERO, "zero", 3.40, "3 for €6"), rec(3, "Z2", ZERO.replace("Bottle", "Cherry Bottle"), "zero", 3.40, "3 for €6"),
+               rec(3, "N", "Pepsi Max Can (330 ml)", "zero", 1.35, pack="330 ml", litres=0.33, container="Can", brand="Pepsi"),
+               rec(3, "PF", "Pepsi Regular Bottle (2 L)", "full", 2.65, brand="Pepsi")], p)
+    items = ds.change_feed(ds.connect(p, 2), days=7)["items"]
+    kinds = [(i["date"][-2:], i["brand"], i["kind"], i["offer_from"], i["offer_to"], i["skus"]) for i in items]
+    assert ("03", "Coca-Cola", "promo_change", "3 for €6.75", "3 for €6.00", 2) in kinds
+    assert not any(k[0] == "02" and k[2] == "promo_change" for k in kinds)    # relabel is not a change
+    assert ("03", "Pepsi", "listed", None, None, 1) in kinds
+
+
+def test_event_confounders_offer_and_assortment(tmp_path):
+    p = tmp_path / "c.parquet"
+    for day in range(1, 14):
+        promo = "3 for €6" if day >= 8 else "3 for €6.75"
+        recs = [rec(day, "F", FULL, "full", 4.20), rec(day, "Z", ZERO, "zero", 3.40, promo),
+                rec(day, "PF", "Pepsi Regular Bottle (2 L)", "full", 2.65, brand="Pepsi"),
+                rec(day, "PZ", "Pepsi Max No Sugar Cola Bottle (2 L)", "zero", 2.65, brand="Pepsi")]
+        if day < 13:   # same title, different SKU: present before the event, gone on its day
+            recs.append(rec(day, "PF2", "Pepsi Regular Bottle (2 L)", "full", 3.00, brand="Pepsi"))
+        ds.ingest(recs, p)
+    ev = ds.event_study(ds.connect(p, 2), [{"id": "b", "date": "2026-07-13", "label": "Budget"}], 14)[0]
+    g = {(r["format_key"], r["sugar_tier"]): r for r in ev["rival"]}
+    assert g[("1x2 L PET", "no_sugar")]["confounded"]                         # offer changed on day 8
+    assert g[("1x2 L PET", "full")]["confounded"]                             # a Pepsi SKU left the range
+    assert any(c.get("kind") == "assortment" for c in g[("1x2 L PET", "full")]["confounders"])

@@ -31,22 +31,24 @@ This system reproduces, at hobby scale and zero cost, the kind of daily price-in
 that underpins those decisions — and frames the output in RGM language. Trade investment is not
 observable from the shelf, and the project does not claim to measure it.
 
-## What the data shows (SuperValu IE, 27 Sep 2026)
+## What the data shows (SuperValu IE, 6 Oct 2026)
 
-Coca-Cola history runs from 4 Jun 2026 (116 days); competitor history from 27 Sep 2026, so the
-competitive read is a first snapshot. The dashboard recomputes every finding daily.
+Coca-Cola history runs from 4 Jun 2026 (125 days); competitor history from 27 Sep 2026 (10 days).
+The dashboard recomputes every finding daily.
 
 - **Coca-Cola charges a full-sugar premium on every pack** (+4% to +24% per litre over Zero Sugar,
-  regular prices). Against the levy on full-sugar drinks (**€0.30/L** incl. VAT) the premium ranges
-  from **0.67× to 3.03×**; six of eight packs sit above the levy.
-- **Pepsi largely does not:** Pepsi and Pepsi Max cost the same in 6 of 7 pack sizes.
-- **Pepsi is cheaper than Coca-Cola on 8 of 9 matched packs** at today's prices; only the promoted
-  Coca-Cola Zero Sugar 2 L bottle (3 for €6.75) puts Coca-Cola ahead. Five of the nine Pepsi prices
-  require a SuperValu Real Rewards card.
-- **Coca-Cola promotes the 2 L bottle almost permanently:** four 2 L SKUs were on promotion on at
-  least 90% of days; shoppers could buy the 2 L Zero Sugar below its regular price on every day.
-- **Diet Coke is priced identically to Zero Sugar** in all eight matched packs.
-- **One ladder inversion:** the 500 ml Zero Sugar can costs 8.5% more per litre than the 330 ml can.
+  regular prices; unchanged list prices for 125 days). Against the levy on full-sugar drinks
+  (**€0.30/L** incl. VAT) the premium ranges from **0.67× to 3.03×**; six of eight packs sit above it.
+- **Pepsi largely does not:** Pepsi and Pepsi Max cost the same in 5 of 7 pack sizes today.
+- **Pepsi is cheaper than Coca-Cola on 8 of 10 matched packs** at today's prices. The two
+  exceptions are both 2 L bottles, after Coca-Cola moved its 2 L offer to 3 for €6 on 1 Oct.
+- **Different promotion models:** Pepsi was on promotion on 60% of SKU-days in its first ten days,
+  69% of them Rewards (loyalty) prices; Coca-Cola 18.5% over its 125 days, of which 8.6% Rewards.
+- **Budget 2027 (6 Oct):** no change to the SSDT in the official summary; on the first day after
+  it, no Coca-Cola pack changed its premium. The before/after read excludes packs where an offer or
+  the range changed inside the windows.
+- **Diet Coke is priced identically to Zero Sugar** in all matched packs; **one ladder inversion**:
+  the 500 ml Zero Sugar can costs 8.5% more per litre than the 330 ml can.
 
 **How to read the levy ratio.** A ratio above 1× does not show that the tax is over-passed to
 shoppers, and one below 1× does not show absorption: the premium also reflects pricing choices per
@@ -70,7 +72,7 @@ A consulting-style report in six sections, each addressable by link (e.g. `dashb
 
 | Section | Exhibits |
 |---|---|
-| **Summary** | Headline, four KPIs and key messages, all computed from the day's data |
+| **Summary** | Headline, four KPIs, key messages and the weekly "What changed" feed, all computed from the day's data |
 | **Sugar tax** | 1 · Full-sugar premium against the levy, pack by pack · 2 · Budget watch: pre-Budget baseline, then before/after comparison |
 | **Pack architecture** | 3 · Price-per-litre ladder by pack volume, Coca-Cola against Pepsi · 4 · Ladder inversions |
 | **Promotions** | 5 · Promotion calendar (SKU × day, by mechanic) · 6 · 2 L price paid against regular price |
@@ -188,7 +190,8 @@ provenance logged. Full statement in [`COMPLIANCE.md`](COMPLIANCE.md). Not legal
 - [x] F3 Consulting-style redesign: six sections, nine exhibits, head-to-head competition
 - [ ] F3 Second retailer
 - [x] F4a Budget watch: dated events, automatic before/after study, levy by date
-- [ ] F4b Advanced analytics: weekly change feed, assortment tracker, EDLP vs high-low, deposit-inclusive prices
+- [x] F4b What changed: weekly change feed, confounder-aware Budget read, parser fixes
+- [ ] F4c EDLP vs high-low by SKU (from ~25 Oct, four weeks of competitor history); deposit-inclusive prices
 - [ ] F5 In-browser SQL over the Parquet history; weekly brief with claim-strength guardrails
 
 Details and gates: [`docs/PROJECT_CONTROL.md`](docs/PROJECT_CONTROL.md).

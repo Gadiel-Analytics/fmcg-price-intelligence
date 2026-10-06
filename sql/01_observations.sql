@@ -37,9 +37,13 @@ flags AS (
     SELECT *,
         regexp_matches(lower(title), 'cherry|vanilla|lime|mango|raspberry|cream|strawberr|peach|pink|berry') AS flavoured,
         (title ILIKE '%caffeine free%' OR title ILIKE '%zero caffeine%')   AS caffeine_free,
-        TRY_CAST(regexp_extract(promo_text, '(\d+)\s*for\s*€\s*(\d+(?:\.\d+)?)', 1) AS INTEGER) AS mb_qty,
-        TRY_CAST(regexp_extract(promo_text, '(\d+)\s*for\s*€\s*(\d+(?:\.\d+)?)', 2) AS DOUBLE)  AS mb_price,
-        TRY_CAST(regexp_extract(promo_text, 'Only\s*€\s*(\d+(?:\.\d+)?)', 1) AS DOUBLE)        AS only_price
+        CASE WHEN regexp_extract(promo_text, '(\d+)\s*for\s*(€)?\s*(\d+(?:\.\d+)?)', 2, 'i') = '€'
+                  OR regexp_extract(promo_text, '(\d+)\s*for\s*(€)?\s*(\d+(?:\.\d+)?)', 3, 'i') LIKE '%.%'
+             THEN TRY_CAST(regexp_extract(promo_text, '(\d+)\s*for\s*(€)?\s*(\d+(?:\.\d+)?)', 1, 'i') AS INTEGER) END AS mb_qty,
+        CASE WHEN regexp_extract(promo_text, '(\d+)\s*for\s*(€)?\s*(\d+(?:\.\d+)?)', 2, 'i') = '€'
+                  OR regexp_extract(promo_text, '(\d+)\s*for\s*(€)?\s*(\d+(?:\.\d+)?)', 3, 'i') LIKE '%.%'
+             THEN TRY_CAST(regexp_extract(promo_text, '(\d+)\s*for\s*(€)?\s*(\d+(?:\.\d+)?)', 3, 'i') AS DOUBLE) END AS mb_price,
+        TRY_CAST(regexp_extract(promo_text, 'only\s*€\s*(\d+(?:\.\d+)?)', 1, 'i') AS DOUBLE) AS only_price
     FROM mapped
 )
 SELECT *,
@@ -54,6 +58,12 @@ SELECT *,
         ELSE 'badge'
     END AS mechanic,
     COALESCE(promo_text ILIKE '%rewards%', FALSE) AS loyalty_gated,
+    -- normalised offer, so wording changes of the same deal are not reported as changes
+    CASE WHEN promo_text IS NULL THEN 'none'
+         WHEN mb_qty IS NOT NULL THEN mb_qty || ' for €' || printf('%.2f', mb_price)
+         WHEN only_price IS NOT NULL THEN 'only €' || printf('%.2f', only_price)
+         ELSE 'badge' END
+      || CASE WHEN promo_text ILIKE '%rewards%' THEN ' (Rewards)' ELSE '' END AS offer,
     pack_count || 'x' || pack || ' ' || container AS format_key
 FROM flags;
 

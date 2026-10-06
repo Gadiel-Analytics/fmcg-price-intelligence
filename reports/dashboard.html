@@ -68,6 +68,11 @@ h1{font-size:clamp(28px,3.4vw,40px);line-height:1.16;font-weight:700;letter-spac
 .messages p{font-size:17px;font-weight:500;line-height:1.45;max-width:78ch}
 .messages a{font-size:14px;font-weight:500;white-space:nowrap;text-decoration:none}
 .messages a:hover{text-decoration:underline}
+.changes{margin-top:14px}
+.changes td.kind{white-space:nowrap;font-weight:500}
+.changes h3.sub{font-size:16px;font-weight:600;margin:20px 0 4px}
+.outcome{font-size:15px;margin:-6px 0 16px;padding:10px 14px;border:1px solid var(--rule);border-radius:6px;max-width:82ch}
+.outcome strong{font-weight:600}
 .sec-head h2{font-size:28px;font-weight:700;letter-spacing:-.015em}
 .sec-head p{font-size:17px;color:var(--sec);margin-top:8px;max-width:72ch}
 .exhibit{margin-top:52px}
@@ -93,7 +98,8 @@ details.data summary::before{content:"+ ";} details.data[open] summary::before{c
 .table-wrap{overflow-x:auto;margin-top:10px}
 table{width:100%;border-collapse:collapse;font-size:14.5px}
 th{text-align:left;font-weight:600;font-size:13px;color:var(--sec);padding:10px 12px;border-bottom:2px solid var(--ink);white-space:nowrap}
-td{padding:10px 12px;border-bottom:1px solid var(--rule);font-variant-numeric:tabular-nums;vertical-align:top}
+td{padding:10px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+td.num,td.tnum{font-variant-numeric:tabular-nums}
 th.num,td.num{text-align:right} td.muted{color:var(--mut)}
 .tag{display:inline-block;font-size:12.5px;padding:1px 8px;border-radius:999px;background:var(--grey-l);color:var(--sec);margin:0 4px 3px 0;white-space:nowrap}
 .tag.r{background:#FEF0C7;color:#93370D}
@@ -117,6 +123,14 @@ footer a{color:var(--sec)}
   .brand-nav a:not(.source){display:none}
   .tabs{gap:22px;-webkit-mask-image:linear-gradient(to right,#000 85%,transparent);mask-image:linear-gradient(to right,#000 85%,transparent)}
   .messages li{grid-template-columns:1fr;gap:6px}
+  .changes thead{display:none}
+  .changes table,.changes tbody{display:block}
+  .changes tr{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;padding:12px 0;border-bottom:1px solid var(--rule)}
+  .changes td{border:0;padding:0}
+  .changes td:nth-child(2){font-weight:600}
+  .changes td.kind{grid-column:1/3;font-size:13.5px;color:var(--ind)}
+  .changes td:nth-child(4){grid-column:1/3;color:var(--sec)}
+  .changes td.num{display:none}
   .dek{font-size:16.5px}
 }
 @media print{
@@ -164,6 +178,9 @@ footer a{color:var(--sec)}
 <div class="kpis" id="kpis"></div>
 <h2 class="h2">Key messages</h2>
 <ul class="messages" id="messages"></ul>
+<h2 class="h2" id="changes">What changed in the last seven days</h2>
+<p class="note" id="changes-note"></p>
+<div class="changes" id="changes-body"></div>
 </section>
 
 <!-- SUGAR TAX -->
@@ -183,9 +200,11 @@ footer a{color:var(--sec)}
 <div class="exn">Exhibit 2 · Budget watch</div>
 <h3 class="ext" id="exev-title"></h3>
 <p class="exs" id="exev-sub"></p>
+<p class="outcome" id="exev-outcome" hidden></p>
 <div class="legend" id="exev-legend"></div>
 <div class="chart" id="exev-chart"></div>
 <div class="sowhat" id="exev-so"></div>
+<details class="data" id="exev-details" hidden><summary>Pepsi gap before and after</summary><div class="table-wrap" id="exev-table"></div></details>
 <figcaption class="source" id="exev-source"></figcaption>
 </figure>
 </section>
@@ -341,6 +360,13 @@ const plural=(n,one,many)=>n===1?one:(many||one+"s");
 const words=n=>(["no","one","two","three","four","five","six","seven","eight","nine","ten","eleven","twelve"][n]??String(n));
 const Words=n=>{const w=words(n);return w.charAt(0).toUpperCase()+w.slice(1);};
 const empty=m=>`<div class="empty">${m}</div>`;
+function offerLabel(o){
+  if(!o||o==="none") return "no promotion";
+  if(o==="badge") return "value badge";
+  let s=o.replace(/€(\d+)\.00/g,"€$1").replace(/^only /,"price cut to ");
+  if(/\(Rewards\)/.test(s)) s=s.replace(" (Rewards)","").replace("price cut to ","Rewards price ")+(s.startsWith("price cut")?"":" with Rewards");
+  return s.replace(/\s+with Rewards$/," (Rewards)");
+}
 const shortTitle=(t,max)=>t.length>max?t.slice(0,max-1)+"…":t;
 
 /* ---------- analytics: every headline is computed, with guards ---------- */
@@ -460,8 +486,9 @@ function titles(a){
     } else {
       const ok=ev.rows.filter(r=>r.delta!=null),ch=ok.filter(r=>Math.abs(r.delta)>=0.02);
       const up=ch.filter(r=>r.delta>0).length,dn=ch.length-up;
+      const levyTail=ev.levy_changed===false?"; no change to the levy was announced":"";
       t.exev=!ok.length?`${ev.label}: no post-event prices yet`
-        :!ch.length?`In the ${words(ev.post_days)} ${plural(ev.post_days,"day")} since ${ev.label}, no Coca-Cola pack changed its full-sugar premium`
+        :!ch.length?`In the ${words(ev.post_days)} ${plural(ev.post_days,"day")} since ${ev.label}, no Coca-Cola pack changed its full-sugar premium${levyTail}`
         :`The full-sugar premium ${dn===0?"rose":up===0?"fell":"moved"} on ${words(ch.length)} of ${words(ok.length)} Coca-Cola packs in the ${words(ev.post_days)} ${plural(ev.post_days,"day")} since ${ev.label}`;
     }
   }
@@ -535,7 +562,45 @@ function renderSummary(){
     [t.ex1,"sugar-tax","ex-1","Exhibit 1"],[t.exev,"sugar-tax","ex-ev","Exhibit 2"],[t.ex6,"competition","ex-6","Exhibit 7"],[t.ex7,"competition","ex-7","Exhibit 8"],
     [t.ex4,"promotions","ex-4","Exhibit 5"],[A.inversions.length?t.ex3:null,"pack-architecture","ex-3","Exhibit 4"],[t.ex9,"competition","ex-9","Exhibit 10"],
   ].filter(m=>m[0]);
-  document.getElementById("messages").innerHTML=M.map(([txt,sec,ex,lab])=>`<li><p>${esc(txt)}.</p><a href="#${sec}" data-goto="${sec}" data-ex="${ex}">See ${lab.toLowerCase()}</a></li>`).join("");
+  const fc=(c.change_feed?.items||[]).find(i=>i.brand===FOCAL&&(i.kind==="promo_change"||i.kind==="price_change"||i.kind==="promo_start"));
+  if(fc){const msg=`On ${fmtShort(fc.date)}, ${FOCAL} changed ${changeText(fc).replace(/^([^:]+): offer changed from/,"the offer on its $1 from").replace(/^([^:]+): /,"its $1: ")}`;
+    M.splice(2,0,[msg,"summary","changes","What changed"]);}
+  renderChanges();
+  document.getElementById("messages").innerHTML=M.map(([txt,sec,ex,lab])=>`<li><p>${esc(txt)}.</p><a href="#${sec}" data-goto="${sec}" data-ex="${ex}">${lab.startsWith("Exhibit")?"See "+lab.toLowerCase():"See "+lab.toLowerCase()}</a></li>`).join("");
+}
+
+function changeText(i){
+  const packs=[...new Set(i.formats.map(f=>packOf({format_key:f})))];
+  const SN=i.brand===FOCAL?{full:"Original",zero:"Zero Sugar",diet:"Diet Coke"}:{full:"regular",zero:"no sugar",diet:"diet"};
+  const sug=[...new Set((i.sugar||[]).map(k=>SN[k]||k))];
+  const what=(packs.length<=2?packs.join(" and "):`${packs.length} pack sizes`)+(sug.length&&sug.length<3?`, ${sug.join(" and ")}`:"");
+  switch(i.kind){
+    case "promo_change": return `${what}: offer changed from ${offerLabel(i.offer_from)} to ${offerLabel(i.offer_to)}`;
+    case "promo_start": return `${what}: promotion started, ${offerLabel(i.offer_to)}`;
+    case "promo_end": return `${what}: promotion ended (was ${offerLabel(i.offer_from)})`;
+    case "price_change": {const p=i.prices[0];return i.skus===1?`${what}: regular price ${i.direction} from ${eur(p[0])} to ${eur(p[1])}`:`${what}: regular price ${i.direction} on ${i.skus} SKUs`;}
+    case "listed": return `${what}: new listing`;
+    case "relisted": return `${what}: listed again after a gap`;
+    case "delisted": return `${what}: not seen since ${fmtShort(new Date(new Date(i.date+"T00:00:00Z")-864e5).toISOString().slice(0,10))}`;
+  }
+  return what;
+}
+const KIND={promo_change:"Offer changed",promo_start:"Promotion started",promo_end:"Promotion ended",price_change:"Regular price",listed:"New listing",relisted:"Listed again",delisted:"Not listed"};
+function renderChanges(){
+  const f=CUBE.change_feed, el=document.getElementById("changes-body"), note=document.getElementById("changes-note");
+  if(!f){document.getElementById("changes").hidden=true;note.hidden=true;el.innerHTML="";return;}
+  const items=f.items||[];
+  note.textContent=`${fmtDate(f.start)} to ${fmtDate(f.end)}. Offers are compared after normalising their wording, so a relabelled deal is not a change. A SKU counts as not listed after ${(CUBE.analysis_active_window||2)+1} days without being seen.`;
+  if(!items.length){el.innerHTML=empty("No offer, price or listing changes in the last seven days.");return;}
+  const head=`<thead><tr><th>Date</th><th>Brand</th><th>Change</th><th>Detail</th><th class="num">SKUs</th></tr></thead>`;
+  const row=i=>`<tr><td class="tnum">${fmtShort(i.date)}</td><td>${esc(i.brand)}</td><td class="kind">${esc(KIND[i.kind]||i.kind)}</td><td>${esc(changeText(i))}</td><td class="num">${i.skus}</td></tr>`;
+  const block=(title,list,max,foot)=>{if(!list.length)return `<h3 class="sub">${title}</h3>`+empty("None in this period.");
+    const top=list.slice(0,max),rest=list.slice(max);
+    return `<h3 class="sub">${title}</h3><div class="table-wrap"><table>${head}<tbody>${top.map(row).join("")}</tbody></table></div>`+
+      (rest.length?`<details class="data"><summary>Show ${rest.length} more</summary><div class="table-wrap"><table>${head}<tbody>${rest.map(row).join("")}</tbody></table></div></details>`:"")+(foot?`<p class="note">${foot}</p>`:"");};
+  const priceKinds=new Set(["promo_change","promo_start","promo_end","price_change"]);
+  el.innerHTML=block("Prices and offers",items.filter(i=>priceKinds.has(i.kind)),8,"")+
+    block("Listings",items.filter(i=>!priceKinds.has(i.kind)),5,"Short gaps can reflect what the retailer's search returned on a given day rather than a ranging decision; treat a single listing change as a signal to watch, not a delisting.");
 }
 
 /* ---------- sugar tax ---------- */
@@ -561,6 +626,10 @@ function renderEvent(){
   document.getElementById("exev-source").textContent=`Source: SuperValu Ireland public shelf prices, regular prices; event date${host?" from "+host:""}. Changes of less than €0.02 per litre are treated as no change.`;
   const gapOf=r=>{const g=ev.rival.find(x=>x.format_key===r.format_key&&x.sugar_tier==="full");return g;};
   const el=document.getElementById("exev-chart"),so=document.getElementById("exev-so"),lg=document.getElementById("exev-legend");
+  const oc=document.getElementById("exev-outcome");
+  if(ev.outcome){const h2=(()=>{try{return new URL(ev.outcome_source).hostname.replace(/^www\./,"");}catch(e){return "";}})();
+    oc.innerHTML=`<strong>Announced:</strong> ${esc(ev.outcome)}${ev.outcome_source?` <a href="${esc(ev.outcome_source)}">${esc(h2)}</a>`:""}`;oc.hidden=false;} else oc.hidden=true;
+  document.getElementById("exev-details").hidden=ev.status==="upcoming";
   if(ev.status==="upcoming"){
     document.getElementById("exev-sub").textContent=`${ev.label} is on ${fmtDate(ev.date)}. Until then this exhibit holds the baseline: regular prices averaged over the latest ${ev.pre_days} days. From the event date it compares the ${ev.window} days before with the days after, automatically, pack by pack.`;
     lg.innerHTML="";
@@ -568,12 +637,20 @@ function renderEvent(){
     ${ev.rows.map(r=>{const g=gapOf(r);return `<tr><td>${esc(Pack(r))}</td><td class="num">${r.full_pre.toFixed(2)}</td><td class="num">${r.zero_pre.toFixed(2)}</td><td class="num">+${r.prem_pre.toFixed(2)}</td><td class="num">${(r.prem_pre/A.levy).toFixed(2)}×</td><td class="num">${g?spct(g.gap_pre):'<span class="muted">—</span>'}</td></tr>`;}).join("")}</tbody></table></div><p class="note">A dash in the Pepsi column means Pepsi does not sell a full-sugar pack of that size at SuperValu.</p>`;
     so.innerHTML=`<strong>What this will show.</strong> Whether the full-sugar premium, and Pepsi's gap to Coca-Cola, move after the Budget. A change after the announcement is consistent with a response to it, but promotions, costs and competitor moves also shift shelf prices, so the exhibit reports changes without attributing them. If a new levy rate is announced, its effective date is added as a second event.`;
   } else {
-    document.getElementById("exev-sub").textContent=`Full-sugar premium per litre at regular prices: average of the ${ev.pre_days} days before ${ev.label} (${fmtShort(ev.pre_start)}–${fmtShort(ev.pre_end)}) against the ${ev.post_days} ${plural(ev.post_days,"day")} from it (${fmtShort(ev.post_start)}–${fmtShort(ev.post_end)}).`;
+    const span=(a,b)=>a===b?fmtShort(a):`${fmtShort(a)}–${fmtShort(b)}`;
+    document.getElementById("exev-sub").textContent=`Full-sugar premium per litre at regular prices: average of the ${words(ev.pre_days)} days before ${ev.label} (${span(ev.pre_start,ev.pre_end)}) against the ${words(ev.post_days)} ${plural(ev.post_days,"day")} from it (${span(ev.post_start,ev.post_end)}).`;
     lg.innerHTML=`<span><i style="background:var(--grey)"></i>${ev.window} days before</span><span><i style="background:var(--ink)"></i>Since ${esc(ev.label)}</span><span><i class="ln" style="border-color:var(--ind);border-top-style:dashed"></i>Levy per litre</span>`;
     drawBeforeAfter(el,ev.rows.filter(r=>r.prem_post!=null));
     const ch=ev.rows.filter(r=>r.delta!=null&&Math.abs(r.delta)>=0.02);
-    const both=ev.rival.filter(g=>g.gap_post!=null),gm=both.filter(g=>Math.abs(g.gap_post-g.gap_pre)>=0.02).length;
-    const rivalTxt=both.length?`Pepsi's gap to Coca-Cola moved by two points or more on ${words(gm)} of ${words(both.length)} matched packs.`:"Pepsi prices do not yet cover both windows, so the competitive gap is not compared.";
+    const both=ev.rival.filter(g=>g.gap_post!=null),clean=both.filter(g=>!g.confounded),gm=clean.filter(g=>Math.abs(g.gap_post-g.gap_pre)>=0.02).length;
+    const conf=ev.rival.filter(g=>g.confounded);
+    const why=g=>{const c=g.confounders[0];return c.kind==="assortment"?`${c.brand} listing changed`:`${c.brand} offer changed ${fmtShort(c.date)}`;};
+    let rivalTxt=!both.length?"Pepsi prices do not yet cover both windows, so the competitive gap is not compared."
+      :`On the ${words(clean.length)} matched ${plural(clean.length,"pack")} with no offer or listing change in either window, Pepsi's gap to Coca-Cola ${gm===0?(clean.length===1?"held":`held on all ${words(clean.length)}`):`moved by two points or more on ${words(gm)}`}.`;
+    if(conf.length) rivalTxt+=` ${Words(conf.length)} ${plural(conf.length,"pack")} ${conf.length===1?"is":"are"} excluded because something else changed inside the windows: ${conf.map(g=>`${tierPack(FOCAL,g)} (${why(g)})`).join("; ")}.`;
+    document.getElementById("exev-table").innerHTML=`<table><thead><tr><th>Pack</th><th class="num">Gap before</th><th class="num">Gap after</th><th>Read as</th></tr></thead><tbody>
+    ${ev.rival.map(g=>`<tr><td>${esc(Pack(g))} · ${esc(tierName(FOCAL,g.sugar_tier))}</td><td class="num">${spct(g.gap_pre)}</td><td class="num">${g.gap_post==null?"—":spct(g.gap_post)}</td><td class="muted">${g.gap_post==null?"not listed after":g.confounded?"excluded: "+esc(why(g)):Math.abs(g.gap_post-g.gap_pre)>=0.02?"moved":"no change"}</td></tr>`).join("")}</tbody></table>
+    <p class="note">Gap = Pepsi price paid against Coca-Cola, same pack and sugar tier. Negative: Pepsi cheaper.</p>`;
     so.innerHTML=`<strong>So what.</strong> ${esc(ch.length?`The premium changed on ${words(ch.length)} ${plural(ch.length,"pack")}, largest on the ${packOf(ch.sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta))[0])}.`:"The premium held on every pack.")} ${esc(rivalTxt)} A change after the announcement is consistent with a response to it; it is not proof of one.`;
   }
 }

@@ -248,7 +248,7 @@ def competition_index(con):
                    a.brand_family, MIN(m.priority) AS priority,
                    AVG(a.regular_ppl) AS regular_ppl, AVG(a.effective_ppl) AS effective_ppl,
                    COUNT(*) AS skus, BOOL_OR(a.mechanic <> 'none') AS on_promo,
-                   BOOL_OR(a.mechanic = 'loyalty_price') AS loyalty,
+                   BOOL_OR(a.loyalty_gated) AS loyalty,
                    MIN(a.total_litres / a.pack_count) AS unit_litres
             FROM active a JOIN brand_map m ON m.family = a.brand_family
             WHERE a.is_core AND a.segment IS NOT NULL AND a.effective_ppl IS NOT NULL
@@ -344,7 +344,7 @@ def head_to_head(con):
                    ANY_VALUE(a.pack) AS pack, ANY_VALUE(a.pack_count) AS pack_count,
                    ANY_VALUE(a.container) AS container, MIN(a.total_litres) AS total_litres,
                    AVG(a.effective_price) AS price, AVG(a.effective_ppl) AS ppl,
-                   BOOL_OR(a.mechanic <> 'none') AS promo, BOOL_OR(a.mechanic = 'loyalty_price') AS loyalty,
+                   BOOL_OR(a.mechanic <> 'none') AS promo, BOOL_OR(a.loyalty_gated) AS loyalty,
                    string_agg(DISTINCT a.title, ' | ' ORDER BY a.title) AS titles
             FROM a JOIN pairs p ON a.brand_family = p.hero
             WHERE (p.require_re = '' OR regexp_matches(lower(a.title), p.require_re))
@@ -354,7 +354,7 @@ def head_to_head(con):
             SELECT p.pair_id, 'rival', a.format_key, a.sugar_tier,
                    ANY_VALUE(a.pack), ANY_VALUE(a.pack_count), ANY_VALUE(a.container), MIN(a.total_litres),
                    AVG(a.effective_price), AVG(a.effective_ppl),
-                   BOOL_OR(a.mechanic <> 'none'), BOOL_OR(a.mechanic = 'loyalty_price'),
+                   BOOL_OR(a.mechanic <> 'none'), BOOL_OR(a.loyalty_gated),
                    string_agg(DISTINCT a.title, ' | ' ORDER BY a.title)
             FROM a JOIN pairs p ON a.brand_family = p.rival
             WHERE (p.require_re = '' OR regexp_matches(lower(a.title), p.require_re))
@@ -420,6 +420,125 @@ def levy_in_force(analysis: dict, on_date) -> float:
         if on is None or str(r["from"]) <= on:
             rate = float(r["per_litre_incl_vat"])
     return rate
+
+
+def confounders(con, start, end) -> dict:
+    """
+    Offer or regular-price changes on Coca-Cola or Pepsi core SKUs between start
+    and end, keyed by (format_key, sugar_tier). A head-to-head gap that moves
+    while one of these changes sits inside the comparison windows cannot be read
+    as a response to the event, so the event study flags and excludes it.
+    """
+    rows = con.execute("""
+        WITH x AS (
+            SELECT product_id, brand_family, format_key, sugar_tier, d, offer, regular_price,
+                   LAG(offer) OVER w AS p_offer, LAG(regular_price) OVER w AS p_reg
+            FROM priced
+            WHERE is_core AND brand_family IN ('Coca-Cola', 'Pepsi')
+              AND product_id IN (SELECT product_id FROM active)
+            WINDOW w AS (PARTITION BY product_id ORDER BY d))
+        SELECT format_key, sugar_tier, strftime(d, '%Y-%m-%d'), brand_family,
+               ANY_VALUE(p_offer), ANY_VALUE(offer)
+        FROM x
+        WHERE d BETWEEN ? AND ?
+          AND ((p_offer IS NOT NULL AND offer <> p_offer)
+               OR (p_reg IS NOT NULL AND regular_price IS NOT NULL AND abs(regular_price - p_reg) >= 0.01))
+        GROUP BY ALL ORDER BY 3
+    """, [start, end]).fetchall()
+    out: dict = {}
+    for fk, tier, d, fam, frm, to in rows:
+        out.setdefault((fk, tier), []).append(dict(date=d, brand=fam, offer_from=frm, offer_to=to))
+    return out
+
+
+def assortment_changes(con, pre: tuple, post: tuple) -> dict:
+    """SKUs that are in one comparison window but not the other, keyed by
+    (format_key, sugar_tier): a moved average that is really a changed mix."""
+    def skus(a, b):
+        return {r[0]: (r[1], r[2], r[3], r[4]) for r in con.execute("""
+            SELECT product_id, ANY_VALUE(format_key), ANY_VALUE(sugar_tier), ANY_VALUE(brand_family),
+                   ANY_VALUE(title) FROM priced
+            WHERE is_core AND brand_family IN ('Coca-Cola', 'Pepsi') AND d BETWEEN ? AND ?
+              AND product_id IN (SELECT product_id FROM active)
+            GROUP BY product_id""", [a, b]).fetchall()}
+    before, after = skus(*pre), skus(*post)
+    out: dict = {}
+    for pid in sorted(set(before) ^ set(after)):
+        fk, tier, fam, title = before.get(pid) or after.get(pid)
+        out.setdefault((fk, tier), []).append(dict(
+            date=None, brand=fam, kind="assortment", title=title,
+            offer_from="listed before" if pid in before else "not listed before",
+            offer_to="not listed after" if pid in before else "listed after"))
+    return out
+
+
+def change_feed(con, days: int = 7, active_window_days: int = DEFAULT_ACTIVE_WINDOW_DAYS) -> dict:
+    """
+    What changed in the latest `days` days, grouped for reading: offers that
+    started, ended or changed (normalised offers, so wording changes are not
+    changes), regular-price changes, SKUs listed for the first time, and SKUs
+    no longer listed. A brand's first collection day is not reported as listings.
+    """
+    import datetime as _dt
+    last = con.execute("SELECT MAX(d) FROM obs").fetchone()[0]
+    if last is None:
+        return {"start": None, "end": None, "items": []}
+    start = last - _dt.timedelta(days=days - 1)
+    ev = con.execute("""
+        WITH x AS (
+            SELECT product_id, brand_family, title, format_key, sugar_class, d, offer, regular_price,
+                   LAG(d) OVER w AS p_d, LAG(offer) OVER w AS p_offer, LAG(regular_price) OVER w AS p_reg
+            FROM priced WINDOW w AS (PARTITION BY product_id ORDER BY d)),
+        bstart AS (SELECT brand_family, MIN(d) AS b0 FROM priced GROUP BY 1)
+        SELECT x.d, x.brand_family, x.title, x.format_key, x.sugar_class,
+               CASE WHEN x.p_d IS NULL THEN 'listed'
+                    WHEN x.d - x.p_d > ? THEN 'relisted'
+                    WHEN x.offer <> x.p_offer AND x.p_offer = 'none' THEN 'promo_start'
+                    WHEN x.offer <> x.p_offer AND x.offer = 'none' THEN 'promo_end'
+                    WHEN x.offer <> x.p_offer THEN 'promo_change'
+                    WHEN x.p_reg IS NOT NULL AND x.regular_price IS NOT NULL
+                         AND abs(x.regular_price - x.p_reg) >= 0.01 THEN 'price_change'
+               END AS kind,
+               x.p_offer, x.offer, x.p_reg, x.regular_price
+        FROM x JOIN bstart b USING (brand_family)
+        WHERE x.d BETWEEN ? AND ? AND NOT (x.p_d IS NULL AND x.d = b.b0)
+    """, [active_window_days + 1, start, last]).fetchall()
+    gone = con.execute("""
+        SELECT MAX(d) AS l, ANY_VALUE(brand_family), ANY_VALUE(title), ANY_VALUE(format_key),
+               ANY_VALUE(sugar_class)
+        FROM obs GROUP BY product_id
+        HAVING MAX(d) < ? AND MAX(d) >= ?
+    """, [last - _dt.timedelta(days=active_window_days), start - _dt.timedelta(days=1)]).fetchall()
+    groups: dict = {}
+    for d, fam, title, fk, sc, kind, p_off, off, p_reg, reg in ev:
+        if kind is None:
+            continue
+        if kind == "price_change":
+            key = (d.isoformat(), fam, kind, "up" if reg > p_reg else "down", "")
+        elif kind in ("listed", "relisted"):
+            key = (d.isoformat(), fam, kind, "", "")
+        else:
+            key = (d.isoformat(), fam, kind, p_off or "", off or "")
+        g = groups.setdefault(key, {"titles": [], "formats": set(), "prices": [], "sugar": set()})
+        g["titles"].append(title); g["formats"].add(fk); g["sugar"].add(sc)
+        if kind == "price_change":
+            g["prices"].append([round(p_reg, 2), round(reg, 2)])
+    for l, fam, title, fk, sc in gone:
+        key = ((l + _dt.timedelta(days=1)).isoformat(), fam, "delisted", "", "")
+        g = groups.setdefault(key, {"titles": [], "formats": set(), "prices": [], "sugar": set()})
+        g["titles"].append(title); g["formats"].add(fk); g["sugar"].add(sc)
+    items = []
+    for (d, fam, kind, a, b), g in groups.items():
+        items.append(dict(date=d, brand=fam, kind=kind, offer_from=a if kind.startswith("promo") else None,
+                          offer_to=b if kind.startswith("promo") else None,
+                          direction=a if kind == "price_change" else None,
+                          skus=len(g["titles"]), titles=sorted(g["titles"]), formats=sorted(g["formats"]),
+                          sugar=sorted(g["sugar"]),
+                          prices=g["prices"]))
+    order = {"Coca-Cola": 0, "Pepsi": 1}
+    # newest first; within a day Coca-Cola, then Pepsi, then other brands; larger groups first
+    items.sort(key=lambda i: (-int(i["date"].replace("-", "")), order.get(i["brand"], 9), -i["skus"]))
+    return {"start": start.isoformat(), "end": last.isoformat(), "days": days, "items": items}
 
 
 def event_study(con, events: list[dict], window: int = 14) -> list[dict]:
@@ -492,12 +611,18 @@ def event_study(con, events: list[dict], window: int = 14) -> list[dict]:
                              prem_post=round(prem_post, 3) if q else None,
                              delta=round(prem_post - prem_pre, 3) if q else None))
         gpre, gpost = gaps(pre_s, pre_e), gaps(post_s, post_e)
+        conf = confounders(con, pre_s, post_e) if post_s else {}
+        if post_s:
+            for k, items in assortment_changes(con, (pre_s, pre_e), (post_s, post_e)).items():
+                conf.setdefault(k, []).extend(items)
         rival = [dict(format_key=k[0], sugar_tier=k[1], gap_pre=round(v, 3),
-                      gap_post=round(gpost[k], 3) if k in gpost else None)
+                      gap_post=round(gpost[k], 3) if k in gpost else None,
+                      confounded=k in conf, confounders=conf.get(k, []))
                  for k, v in sorted(gpre.items())]
         iso = lambda x: x.isoformat() if x else None
         out.append(dict(id=ev.get("id"), date=d.isoformat(), label=ev.get("label"), kind=ev.get("kind"),
-                        detail=ev.get("detail"), source=ev.get("source"), status=status,
+                        detail=ev.get("detail"), source=ev.get("source"), outcome=ev.get("outcome"),
+                        outcome_source=ev.get("outcome_source"), levy_changed=ev.get("levy_changed"), status=status,
                         days_to=(d - last).days, window=window,
                         pre_start=iso(pre_s), pre_end=iso(pre_e), post_start=iso(post_s), post_end=iso(post_e),
                         pre_days=(pre_e - pre_s).days + 1,

@@ -69,6 +69,8 @@ Keep `compliance.max_skus_per_run` above the expected SKU count, or later querie
 - **New event** (e.g. a levy's effective date): add an entry under `events` in
   `config/catalog.yaml` with `id`, `date`, `label`, `kind`, `detail`, `source`. The next run
   studies it automatically.
+- **Event outcome:** once known, add `outcome` (one sentence), `outcome_source` (URL) and
+  `levy_changed` (true/false). The exhibit shows it as "Announced" and adapts its title.
 - **Levy rate change:** add a line to `analysis.levy_schedule` with the date it takes effect and
   the new rate per litre incl. VAT (ex-VAT rate per hectolitre ÷ 100 × 1.23). Earlier dates keep
   the old rate.

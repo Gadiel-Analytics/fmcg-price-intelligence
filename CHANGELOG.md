@@ -1,5 +1,32 @@
 # Changelog
 
+## F4b — What changed, and a cleaner Budget read (2026-10-06)
+
+### What changed
+- **Weekly change feed** on the Summary: offers that started, ended or changed, regular-price
+  changes, new listings, SKUs listed again after a gap and SKUs no longer seen, grouped by brand,
+  pack and sugar variant (`change_feed` in the cube, schema v6; window `analysis.change_feed_days`).
+- Offers are compared **normalised** (mechanic, quantity, price, Rewards flag), so a relabelled
+  deal — "3 for €6.75" against "3 FOR 6.75 COCA COLA DIET / ZERO RANGE 2LTR" — is not a change.
+- Listing changes carry an explicit caveat: short gaps can reflect search coverage.
+
+### Budget watch
+- **Confounders:** a head-to-head gap is excluded from the before/after read when an offer or
+  regular price changed, or a SKU entered or left the range, inside either window. On Budget day
+  this excluded four packs: both 2 L tiers (Coca-Cola's offer moved to 3 for €6 on 1 Oct, inside the
+  "before" window) and two Pepsi packs whose range changed.
+- **Announced outcome:** `outcome`, `outcome_source` and `levy_changed` on events. Budget 2027 is
+  recorded as no SSDT change in the official summary, pending the Finance Bill.
+
+### Fixes
+- Multibuy parser: case-insensitive, euro sign optional ("2 FOR 6.75 …" was read as a value badge
+  on 6 SKU-days), with a guard so "3 for 2" is never read as €2.
+- "3 for €10 Rewards Price" is a multibuy that requires Rewards: the head-to-head Rewards marker
+  now uses the loyalty flag rather than the mechanic.
+- Same-title SKUs (two "Pepsi Can (330 ml)" listings at €1.35 and €1.60) are compared by product
+  ID, not title.
+- Tabular numerals limited to numeric cells (hyphen spacing in brand names).
+
 ## F4a — Budget watch (2026-09-27)
 
 - **Dated events** (`events` in `config/catalog.yaml`), starting with Budget 2027 on 6 Oct 2026.

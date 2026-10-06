@@ -133,6 +133,8 @@ analysis:
       note: "SSDT top band (>= 8 g sugar/100 ml): EUR 24.39/hl ex-VAT"
   # Days compared on each side of a dated event (before vs from the event date).
   event_window_days: 14
+  # Days covered by the "What changed" feed on the Summary.
+  change_feed_days: 7
 
 # Dated events annotated on time series and studied before/after automatically.
 # kind: policy | seasonal. An announcement and its effective date are separate
@@ -145,6 +147,11 @@ events:
     kind: "policy"
     detail: "Budget 2027 announcement. Any change to the Sugar Sweetened Drinks Tax would appear here first."
     source: "https://kpmg.com/ie/en/insights/tax/budget-2027.html"
+    # What was announced, once known. Until the Finance Bill is enacted, this is
+    # the official summary, not the legislation.
+    outcome: "No change to the Sugar Sweetened Drinks Tax in the official Budget 2027 summary; to be confirmed against the Finance Bill."
+    outcome_source: "https://www.citizensinformation.ie/en/money-and-tax/budgets/budget-2027/"
+    levy_changed: false
 
 quality:
   # Refuse to ingest a run whose SKU count falls below this share of the
