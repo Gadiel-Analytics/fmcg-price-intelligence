@@ -3,9 +3,9 @@
 The pipeline is deployed and running daily. This runbook covers the routine operations.
 
 Repository: `https://github.com/Gadiel-Analytics/fmcg-price-intelligence`
-Case study: `https://gadiel-analytics.github.io/fmcg-price-intelligence/`
-Dashboard: `https://gadiel-analytics.github.io/fmcg-price-intelligence/reports/dashboard.html`
-(after the custom domain switch: `https://fmcg.gadielanalytics.com/` and `/reports/dashboard.html`)
+Case study: `https://fmcg.gadielanalytics.com/`
+Dashboard: `https://fmcg.gadielanalytics.com/reports/dashboard.html`
+(`https://gadiel-analytics.github.io/fmcg-price-intelligence/…` redirects here.)
 
 ---
 
@@ -109,6 +109,13 @@ so canonical URLs never point at an address that does not answer yet.
 
 To roll back: remove the custom domain in Settings → Pages and restore `site.base_url`.
 
+**If "Enforce HTTPS" stays unavailable:** the usual cause is the Cloudflare record being
+*Proxied* (orange cloud). A tell-tale sign is mailto links rewritten to `/cdn-cgi/l/email-protection`
+on the live site — Cloudflare's email obfuscation, which only runs on proxied traffic. Fix:
+Cloudflare → DNS → edit `fmcg` → Proxy status **DNS only** → Save. Then, in Settings → Pages,
+remove the custom domain, save, add `fmcg.gadielanalytics.com` again and save: that re-triggers
+certificate issuance. If the domain has a `CAA` record, it must allow `letsencrypt.org`.
+
 ## Search engines
 
 - **Google Search Console** → *Add property* → **Domain** → `gadielanalytics.com` → verify with
@@ -142,7 +149,7 @@ With the GitHub CLI, the first two steps are:
 ```bash
 gh repo edit Gadiel-Analytics/fmcg-price-intelligence \
   --description "Daily Coca-Cola vs Pepsi shelf-price intelligence for Ireland: price-pack architecture, promotions and the sugar levy. By Gadiel Guadarrama, Gadiel Analytics." \
-  --homepage "https://gadiel-analytics.github.io/fmcg-price-intelligence/" \
+  --homepage "https://fmcg.gadielanalytics.com/" \
   --add-topic revenue-growth-management,pricing-analytics,price-intelligence,competitive-intelligence,price-pack-architecture,fmcg,cpg,data-science,analytics-engineering,decision-intelligence,duckdb,python,d3js,github-actions,ireland,sugar-tax
 ```
 

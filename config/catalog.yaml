@@ -167,10 +167,9 @@ compliance:
 # Public site: pages generated on every run from site/*.html
 # =============================================================================
 site:
-  # Where the pages are served. Switch to "https://fmcg.gadielanalytics.com" only
-  # after the custom domain is live (DEPLOYMENT.md, "Custom domain"); the next run
-  # rewrites canonical URLs, structured data and the sitemap.
-  base_url: "https://gadiel-analytics.github.io/fmcg-price-intelligence"
+  # Where the pages are served (custom domain on GitHub Pages, HTTPS enforced).
+  # Changing it rewrites canonical URLs, structured data and the sitemap on the next run.
+  base_url: "https://fmcg.gadielanalytics.com"
   case_study_published: "2026-10-06"
   # Identity, as stated on gadielanalytics.com and theanalyticssystem.com.
   author:

@@ -11,8 +11,8 @@
 > full-sugar Coca-Cola premium against Ireland's **Sugar-Sweetened Drinks Tax**, and compares
 > Coca-Cola with its competitors like-for-like per litre.
 
-**Case study:** https://gadiel-analytics.github.io/fmcg-price-intelligence/
-· **Live dashboard:** https://gadiel-analytics.github.io/fmcg-price-intelligence/reports/dashboard.html
+**Case study:** https://fmcg.gadielanalytics.com/
+· **Live dashboard:** https://fmcg.gadielanalytics.com/reports/dashboard.html
 · **Website:** https://gadielanalytics.com/
 · **Contact:** hello@gadielanalytics.com
 

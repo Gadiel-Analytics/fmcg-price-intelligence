@@ -1,5 +1,13 @@
 # Changelog
 
+## F5.1 — Custom domain (2026-10-06)
+
+- The site is served at **https://fmcg.gadielanalytics.com** (GitHub Pages, domain verified at
+  organisation level, HTTPS enforced). `site.base_url`, README, CITATION and the runbook now use
+  it; canonical URLs, structured data, sitemap and robots follow on the next run. Old github.io
+  links redirect.
+- Runbook: diagnosis and fix when "Enforce HTTPS" is unavailable behind Cloudflare.
+
 ## F5 — Discoverability (2026-10-06)
 
 - **Findings in the HTML.** Every headline, KPI, key message and exhibit title is generated once,

@@ -5,10 +5,10 @@
 
 | Field | Value |
 |---|---|
-| Document version | `v1.6.0` |
+| Document version | `v1.6.1` |
 | Owner | Gadiel Guadarrama |
 | Last updated | 2026-10-06 |
-| Current phase | F5 Discoverability shipped → custom domain, then F4c EDLP vs high-low from ~25 Oct |
+| Current phase | F5 shipped; custom domain live on fmcg.gadielanalytics.com → F4c EDLP vs high-low from ~25 Oct |
 | Next external date | Finance Bill 2026 (confirms Budget tax measures); Budget watch window closes 19 Oct 2026 |
 
 Update protocol: amend the relevant register, bump the version (patch = status/typo, minor = new
@@ -116,3 +116,4 @@ Revenue Growth Management terms, with the strength of every claim stated explici
 | v1.4.0 | 2026-09-27 | F4a Budget watch shipped; D-014; Q-003 procedure |
 | v1.5.0 | 2026-10-06 | F4b shipped; D-015; Q-003 answered pending Finance Bill |
 | v1.6.0 | 2026-10-06 | F5 shipped; D-016, D-017; Q-007; roadmap renumbered (AI layer F6, launch F7) |
+| v1.6.1 | 2026-10-06 | Custom domain live; canonical address switched (D-017 implemented) |
