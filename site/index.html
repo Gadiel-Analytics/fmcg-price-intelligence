@@ -34,6 +34,8 @@ a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible{
 .tab{appearance:none;background:none;border:0;border-bottom:2px solid transparent;padding:16px 0 14px;font:500 15px var(--font);color:var(--mut);cursor:pointer;white-space:nowrap}
 .tab:hover{color:var(--ink)} .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ind)}
 main{max-width:1200px;margin:0 auto;padding:44px 40px 24px}
+.data-status{font-size:14px;line-height:1.5;padding:12px 16px;margin-bottom:24px;background:var(--surf);border-left:3px solid var(--ind)}
+.data-status.overdue{background:#FFFAEB;border-left-color:var(--amber)}
 [role="tabpanel"]:focus{outline:none}
 .kicker{font-size:14px;color:var(--mut);margin-bottom:14px}
 h1{font-size:clamp(28px,3.4vw,40px);line-height:1.16;font-weight:700;letter-spacing:-.02em;max-width:28ch}
@@ -156,6 +158,7 @@ footer a{color:var(--sec)}
 </div>
 </header>
 <main>
+{{freshness}}
 <article>
 <p class="kicker">Case study · Revenue growth management · Pricing analytics</p>
 <h1>How Coca-Cola and Pepsi price soft drinks in Ireland</h1>
@@ -215,5 +218,6 @@ footer a{color:var(--sec)}
 © 2026 Gadiel Guadarrama · Gadiel Analytics. All rights reserved.
 </footer>
 </div>
+<script src="assets/freshness.js"></script>
 </body>
 </html>

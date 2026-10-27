@@ -119,6 +119,8 @@ def change_text(i: dict) -> str:
     what = (" and ".join(packs) if len(packs) <= 2 else f"{len(packs)} pack sizes") + \
            (f", {' and '.join(sug)}" if sug and len(sug) < 3 else "")
     k = i["kind"]
+    if k == "offer_capture":
+        return f"{what}: offer evidence is now {offer_label(i['offer_to'])}; the generic badge prevents a reliable change comparison"
     if k == "promo_change":
         return f"{what}: offer changed from {offer_label(i['offer_from'])} to {offer_label(i['offer_to'])}"
     if k == "promo_start":
@@ -134,13 +136,15 @@ def change_text(i: dict) -> str:
     if k == "relisted":
         return f"{what}: listed again after a gap"
     if k == "delisted":
-        d = date.fromordinal(date.fromisoformat(i["date"]).toordinal() - 1).isoformat()
+        d = i.get("last_seen") or date.fromordinal(date.fromisoformat(i["date"]).toordinal() - 1).isoformat()
         return f"{what}: not seen since {fmt_short(d)}"
     return what
 
 
 def change_message(i: dict) -> str:
     """One readable sentence for the most relevant focal-brand change."""
+    if i.get("after_collection_gap"):
+        return f"First observed on {fmt_short(i['date'])}, after a collection gap: {FOCAL}, {change_text(i)}"
     sn = {"full": "Original", "zero": "Zero Sugar", "diet": "Diet Coke"}
     sug = " and ".join(dict.fromkeys(sn.get(k, k) for k in sorted(i.get("sugar") or [], key=lambda k: "fzd".index(k[0]))))
     packs = list(dict.fromkeys(pack_of({"format_key": f}) for f in i["formats"]))

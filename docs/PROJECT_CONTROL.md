@@ -5,11 +5,11 @@
 
 | Field | Value |
 |---|---|
-| Document version | `v1.6.1` |
+| Document version | `v1.7.0` |
 | Owner | Gadiel Guadarrama |
-| Last updated | 2026-10-06 |
-| Current phase | F5 shipped; custom domain live on fmcg.gadielanalytics.com → F4c EDLP vs high-low from ~25 Oct |
-| Next external date | Finance Bill 2026 (confirms Budget tax measures); Budget watch window closes 19 Oct 2026 |
+| Last updated | 2026-10-27 |
+| Current phase | F5.2 recovery; F1 independent validation pending; F4c requires a complete observed 28-day window |
+| Next external date | Finance Bill verification pending; earliest complete promotion window 23 Nov if collection remains uninterrupted |
 
 Update protocol: amend the relevant register, bump the version (patch = status/typo, minor = new
 decision/gate result, major = repositioning), add a line to §8, commit as
@@ -51,6 +51,10 @@ Revenue Growth Management terms, with the strength of every claim stated explici
 | D-015 | A before/after comparison excludes any pack whose offer, regular price or range changed inside either window, and says which | Prevents attributing a promotion or range change to an event |
 | D-016 | One narrative source: findings are generated in Python, tested, and pre-rendered into the pages | Search and link previews read the findings; one place to apply claim-strength rules |
 | D-017 | Public address: a subdomain of gadielanalytics.com (`fmcg.gadielanalytics.com`) on GitHub Pages, with the domain verified at organisation level and HTTPS enforced | Authority accrues to the author's own domain; verification prevents subdomain takeover |
+| D-018 | Reviewed exact dependency locks and immutable Actions pins; offline CI before publication | Avoid unplanned major upgrades in daily collection |
+| D-019 | Missing collection dates stay missing; promotion patterns require all 28 recent daily observations per SKU | Calendar age is not evidence coverage |
+| D-020 | Retain every promotion badge and explicitly shown deposits; generic-badge transitions are capture evidence | Avoid hidden multibuys and false historical claims |
+
 
 ## 3. Roadmap and gates
 
@@ -58,14 +62,14 @@ Revenue Growth Management terms, with the strength of every claim stated explici
 |---|---|---|---|
 | F0 Hardening | Delisted-SKU exclusion, promotion model, regular-price inference, levy benchmark, Diet Coke collection, idempotent ingest, quality gate, tests, docs | Spread reproducible from committed history; tests green in CI | **Done** — first CI run 2026-09-27: gate passed, 34 SKUs, 11 Diet Coke |
 | F0.1 Brand | Brand bar, byline, share card, favicon, ownership, tabs, licence | Links render a branded preview on LinkedIn and X | **Done** |
-| F1 Price truth review | Validate regular-price inference against 2–4 weeks of new data; decide handling of perma-promoted SKUs | Inference disagreements < 5% of promo SKU-days on manual check | Next |
+| F1 Price truth review | Validate regular-price inference against 2–4 weeks of new data; decide handling of perma-promoted SKUs | Inference disagreements < 5% of promo SKU-days on manual check | **Reviewed; gate pending** — internal diagnostic is not independent validation; see operations review |
 | F2 Competitive scope | Pepsi / Pepsi Max, 7UP, Club, Fanta, Sprite, SuperValu own-label cola, Monster, Red Bull; brand → manufacturer map; sugar band per product | ≥ 80 active SKUs; full/zero pairs for ≥ 3 brands | **Shipped** — gate checked on first live run |
 | F3 Redesign | Consulting-report dashboard, head-to-head competition | Nine exhibits render on desktop and phone with no errors | **Done** |
 | F3b Second retailer | Retailer adapter interface; 1-hour feasibility spike per candidate before committing | Two retailers with matched SKUs on ≥ 10 formats | Planned |
 | F4 Advanced sections | Assortment tracker (listings/delistings), pack-change detection, deposit-inclusive €/L (DRS €0.15/€0.25), 30-day reference-price context, reformulated brands as a quasi-control for the levy spread | Three quantified insights suitable for a case study | Planned |
 | F5 Discoverability | Pre-rendered findings, case study, JSON-LD, sitemap, citation, custom-domain readiness | Pages readable without JavaScript; structured data valid | **Done** |
 | F6 AI layer | In-browser SQL (DuckDB-WASM) over the Parquet; weekly brief generated in CI and checked by a deterministic claim-strength guardrail | Brief contains no causal claim unsupported by the evidence rules | Planned |
-| F7 Launch | Custom domain live, case study shared publicly | Search Console shows the brand queries; post published | Planned |
+| F7 Launch | Custom domain live, case study shared publicly | Search Console shows the brand queries; post published | Domain live; indexing and public post not verified |
 
 ## 4. Decision log
 
@@ -78,12 +82,14 @@ Revenue Growth Management terms, with the strength of every claim stated explici
 | D-014 | 2026-09-27 | Event-study rules (see §2) | Active |
 | D-015 | 2026-10-06 | Confounder exclusion (see §2) | Active |
 | D-016, D-017 | 2026-10-06 | Narrative source; custom domain (see §2) | Active |
+| D-018–D-020 | 2026-10-27 | Dependency governance, observed-coverage gates, multiple badges and deposits | Active |
+
 
 ## 5. Open questions
 
 | ID | Question | Resolves in |
 |---|---|---|
-| Q-001 | Does the SuperValu card price include the DRS deposit, or is it shown separately? | Next real fixture capture |
+| Q-001 | **Resolved for captured cards 2026-10-27:** deposit is explicitly shown separately. Capture actual values; historical missing values remain unknown. | Monitor other formats |
 | Q-002 | ~~What brand label do Diet Coke cards carry?~~ **Resolved 2026-09-27: "Diet Coke".** | — |
 | Q-003 | ~~Does Budget 2027 change the SSDT?~~ **6 Oct 2026: no change in the official summary**; confirm against the Finance Bill | Finance Bill |
 | Q-004 | Which second retailer is reachable at human rate without anti-bot escalation? | F3 spike |
@@ -117,3 +123,5 @@ Revenue Growth Management terms, with the strength of every claim stated explici
 | v1.5.0 | 2026-10-06 | F4b shipped; D-015; Q-003 answered pending Finance Bill |
 | v1.6.0 | 2026-10-06 | F5 shipped; D-016, D-017; Q-007; roadmap renumbered (AI layer F6, launch F7) |
 | v1.6.1 | 2026-10-06 | Custom domain live; canonical address switched (D-017 implemented) |
+
+| v1.7.0 | 2026-10-27 | F5.2 recovery; D-018–D-020; Q-001 live evidence; F1/F4c gates restated |

@@ -35,6 +35,8 @@ a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible{
 .tab{appearance:none;background:none;border:0;border-bottom:2px solid transparent;padding:16px 0 14px;font:500 15px var(--font);color:var(--mut);cursor:pointer;white-space:nowrap}
 .tab:hover{color:var(--ink)} .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ind)}
 main{max-width:1200px;margin:0 auto;padding:44px 40px 24px}
+.data-status{font-size:14px;line-height:1.5;padding:12px 16px;margin-bottom:24px;background:var(--surf);border-left:3px solid var(--ind)}
+.data-status.overdue{background:#FFFAEB;border-left-color:var(--amber)}
 [role="tabpanel"]:focus{outline:none}
 .kicker{font-size:14px;color:var(--mut);margin-bottom:14px}
 h1{font-size:clamp(28px,3.4vw,40px);line-height:1.16;font-weight:700;letter-spacing:-.02em;max-width:28ch}
@@ -152,6 +154,7 @@ footer a{color:var(--sec)}
 </div>
 
 <main>
+{{freshness}}
 <!-- SUMMARY -->
 <section role="tabpanel" id="p-summary" aria-labelledby="t-summary" tabindex="0">
 <p class="kicker" id="kicker">{{kicker}}</p>
@@ -279,6 +282,7 @@ footer a{color:var(--sec)}
 <h3>Collection</h3>
 <p>Once a day, an automated job reads SuperValu Ireland's public search results for a fixed set of cola, lemon-lime, orange and energy-drink queries, at human rate (one page every 3–7 seconds) and without logging in. Each product card yields the price shown, any promotion badge, the pack size and the brand label. Nothing personal is collected.</p>
 <p>A run is refused if it returns fewer than half the products of the past week, so a broken or partial page never enters the history. Re-running a day replaces that day's rows. Obvious retailer typos in pack volume (for example "1.75 ml" for 1.75 L) are corrected and flagged.</p>
+{{reliability_html}}
 <h3>Pricing model</h3>
 <ul>
 <li><strong>Price per litre</strong> divides the price by the total volume of the pack.</li>
@@ -517,8 +521,19 @@ window.addEventListener("resize",()=>{clearTimeout(rsz);rsz=setTimeout(()=>{if(M
 /* ---------- load ---------- */
 async function load(){
   show(location.hash.slice(1)||"summary",{push:false});
-  try{CUBE=await (await fetch("cube.json",{cache:"no-store"})).json();}
-  catch(e){console.error("cube.json could not be loaded",e);return;}
+  try{const response=await fetch("cube.json",{cache:"no-store"});
+    if(!response.ok) throw new Error(`HTTP ${response.status}`);
+    CUBE=await response.json();
+    if(!CUBE.last_run_date||!CUBE.kpis||!Array.isArray(CUBE.latest)) throw new Error("Invalid data file");}
+  catch(e){console.error("cube.json could not be loaded",e);
+    const status=document.getElementById("data-status");
+    status.dataset.loadError="true";
+    status.classList.add("overdue");status.textContent="Unable to load current data. Findings below are from the last published update.";
+    return;}
+  const status=document.getElementById("data-status");
+  status.dataset.date=CUBE.last_run_date;
+  status.dataset.gaps=String(CUBE.reliability?.missing_dates?.length||0);
+  if(window.updateDataStatus) window.updateDataStatus();
   if((CUBE.schema_version||1)<2){document.getElementById("headline").textContent="This data file predates the current dashboard.";document.getElementById("dek").textContent="It is rebuilt on the next daily run.";return;}
   A=analyse(CUBE);
   document.querySelectorAll(".levy-v").forEach(e=>e.textContent=eur(A.levy));
@@ -568,30 +583,31 @@ function changeText(i){
   const sug=[...new Set((i.sugar||[]).map(k=>SN[k]||k))];
   const what=(packs.length<=2?packs.join(" and "):`${packs.length} pack sizes`)+(sug.length&&sug.length<3?`, ${sug.join(" and ")}`:"");
   switch(i.kind){
+    case "offer_capture": return `${what}: offer evidence is now ${offerLabel(i.offer_to)}; the generic badge prevents a reliable change comparison`;
     case "promo_change": return `${what}: offer changed from ${offerLabel(i.offer_from)} to ${offerLabel(i.offer_to)}`;
     case "promo_start": return `${what}: promotion started, ${offerLabel(i.offer_to)}`;
     case "promo_end": return `${what}: promotion ended (was ${offerLabel(i.offer_from)})`;
     case "price_change": {const p=i.prices[0];return i.skus===1?`${what}: regular price ${i.direction} from ${eur(p[0])} to ${eur(p[1])}`:`${what}: regular price ${i.direction} on ${i.skus} SKUs`;}
     case "listed": return `${what}: new listing`;
     case "relisted": return `${what}: listed again after a gap`;
-    case "delisted": return `${what}: not seen since ${fmtShort(new Date(new Date(i.date+"T00:00:00Z")-864e5).toISOString().slice(0,10))}`;
+    case "delisted": return `${what}: not seen since ${fmtShort(i.last_seen||new Date(new Date(i.date+"T00:00:00Z")-864e5).toISOString().slice(0,10))}`;
   }
   return what;
 }
-const KIND={promo_change:"Offer changed",promo_start:"Promotion started",promo_end:"Promotion ended",price_change:"Regular price",listed:"New listing",relisted:"Listed again",delisted:"Not listed"};
+const KIND={offer_capture:"Offer evidence",promo_change:"Offer changed",promo_start:"Promotion started",promo_end:"Promotion ended",price_change:"Regular price",listed:"New listing",relisted:"Listed again",delisted:"Not listed"};
 function renderChanges(){
   const f=CUBE.change_feed, el=document.getElementById("changes-body"), note=document.getElementById("changes-note");
   if(!f){document.getElementById("changes").hidden=true;note.hidden=true;el.innerHTML="";return;}
   const items=f.items||[];
-  note.textContent=`${fmtDate(f.start)} to ${fmtDate(f.end)}. Offers are compared after normalising their wording, so a relabelled deal is not a change. A SKU counts as not listed after ${(CUBE.analysis_active_window||2)+1} days without being seen.`;
+  note.textContent=`${fmtDate(f.start)} to ${fmtDate(f.end)}. Offers are compared after normalising their wording. A SKU counts as not listed after ${(CUBE.analysis_active_window||2)+1} successful collection dates without being seen. Changes across a collection gap carry a first-observed date, not a confirmed start date.`;
   if(!items.length){el.innerHTML=empty("No offer, price or listing changes in the last seven days.");return;}
   const head=`<thead><tr><th>Date</th><th>Brand</th><th>Change</th><th>Detail</th><th class="num">SKUs</th></tr></thead>`;
-  const row=i=>`<tr><td class="tnum">${fmtShort(i.date)}</td><td>${esc(i.brand)}</td><td class="kind">${esc(KIND[i.kind]||i.kind)}</td><td>${esc(changeText(i))}</td><td class="num">${i.skus}</td></tr>`;
+  const row=i=>`<tr><td class="tnum">${fmtShort(i.date)}${i.after_collection_gap?" (first observed)":""}</td><td>${esc(i.brand)}</td><td class="kind">${esc(KIND[i.kind]||i.kind)}</td><td>${esc(changeText(i))}</td><td class="num">${i.skus}</td></tr>`;
   const block=(title,list,max,foot)=>{if(!list.length)return `<h3 class="sub">${title}</h3>`+empty("None in this period.");
     const top=list.slice(0,max),rest=list.slice(max);
     return `<h3 class="sub">${title}</h3><div class="table-wrap"><table>${head}<tbody>${top.map(row).join("")}</tbody></table></div>`+
       (rest.length?`<details class="data"><summary>Show ${rest.length} more</summary><div class="table-wrap"><table>${head}<tbody>${rest.map(row).join("")}</tbody></table></div></details>`:"")+(foot?`<p class="note">${foot}</p>`:"");};
-  const priceKinds=new Set(["promo_change","promo_start","promo_end","price_change"]);
+  const priceKinds=new Set(["offer_capture","promo_change","promo_start","promo_end","price_change"]);
   el.innerHTML=block("Prices and offers",items.filter(i=>priceKinds.has(i.kind)),8,"")+
     block("Listings",items.filter(i=>!priceKinds.has(i.kind)),5,"Short gaps can reflect what the retailer's search returned on a given day rather than a ranging decision; treat a single listing change as a signal to watch, not a delisting.");
 }
@@ -898,5 +914,6 @@ function drawStrip(el,rows){
 }
 load();
 </script>
+<script src="../assets/freshness.js"></script>
 </body>
 </html>

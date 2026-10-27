@@ -1,0 +1,41 @@
+name: Code validation
+on:
+  push:
+    paths-ignore:
+      - 'data/**'
+      - 'reports/**'
+      - 'index.html'
+      - 'sitemap.xml'
+      - 'robots.txt'
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  offline:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        duckdb: ['2.0.0', '1.5.6']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - run: pip install --require-hashes -r requirements-dev.txt
+      - name: Previous-version compatibility (deliberate lock override)
+        if: matrix.duckdb == '1.5.6'
+        run: pip install --no-deps duckdb==1.5.6
+      - run: python -m pytest -q
+      - run: python run.py --dry-run
+      - run: python run.py --export-only
+      - run: python scripts/check_release.py
+      - run: node --test tests/test_freshness.cjs

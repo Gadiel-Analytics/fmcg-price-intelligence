@@ -147,10 +147,11 @@ def latest_prices(con):
         SELECT product_id, brand, brand_family, owner, segment, private_label,
                variant, title, pack, pack_count, container,
                sugar_class, sugar_tier, is_core, flavoured, caffeine_free, total_litres,
-               base_price, regular_price, effective_price,
+               base_price, regular_price, effective_price, deposit,
+               CASE WHEN deposit IS NOT NULL THEN ROUND(effective_price + deposit, 2) END AS payable_incl_deposit,
                ROUND(regular_ppl, 2) AS regular_ppl,
                ROUND(effective_ppl, 2) AS effective_ppl,
-               mechanic, promo_text, loyalty_gated,
+               mechanic, promo_text, loyalty_gated, regular_is_inferred,
                ROUND(promo_depth, 3) AS promo_depth,
                strftime(d, '%Y-%m-%d') AS last_seen
         FROM active
@@ -492,7 +493,9 @@ def change_feed(con, days: int = 7, active_window_days: int = DEFAULT_ACTIVE_WIN
         bstart AS (SELECT brand_family, MIN(d) AS b0 FROM priced GROUP BY 1)
         SELECT x.d, x.brand_family, x.title, x.format_key, x.sugar_class,
                CASE WHEN x.p_d IS NULL THEN 'listed'
-                    WHEN x.d - x.p_d > ? THEN 'relisted'
+                    WHEN (SELECT COUNT(DISTINCT o.d) FROM obs o
+                          WHERE o.d > x.p_d AND o.d <= x.d) > ? THEN 'relisted'
+                    WHEN x.offer <> x.p_offer AND (x.offer LIKE 'badge%' OR x.p_offer LIKE 'badge%') THEN 'offer_capture'
                     WHEN x.offer <> x.p_offer AND x.p_offer = 'none' THEN 'promo_start'
                     WHEN x.offer <> x.p_offer AND x.offer = 'none' THEN 'promo_end'
                     WHEN x.offer <> x.p_offer THEN 'promo_change'
@@ -504,11 +507,14 @@ def change_feed(con, days: int = 7, active_window_days: int = DEFAULT_ACTIVE_WIN
         WHERE x.d BETWEEN ? AND ? AND NOT (x.p_d IS NULL AND x.d = b.b0)
     """, [active_window_days + 1, start, last]).fetchall()
     gone = con.execute("""
-        SELECT MAX(d) AS l, ANY_VALUE(brand_family), ANY_VALUE(title), ANY_VALUE(format_key),
-               ANY_VALUE(sugar_class)
-        FROM obs GROUP BY product_id
-        HAVING MAX(d) < ? AND MAX(d) >= ?
-    """, [last - _dt.timedelta(days=active_window_days), start - _dt.timedelta(days=1)]).fetchall()
+        WITH x AS (
+            SELECT product_id, MAX(d) AS l, ANY_VALUE(brand_family) AS fam,
+                   ANY_VALUE(title) AS title, ANY_VALUE(format_key) AS fk, ANY_VALUE(sugar_class) AS sc
+            FROM obs GROUP BY product_id)
+        SELECT l, fam, title, fk, sc, (SELECT MIN(d) FROM obs WHERE d > x.l) AS first_missing
+        FROM x WHERE (SELECT COUNT(DISTINCT d) FROM obs WHERE d > x.l) > ?
+          AND l >= ?
+    """, [active_window_days, start - _dt.timedelta(days=1)]).fetchall()
     groups: dict = {}
     for d, fam, title, fk, sc, kind, p_off, off, p_reg, reg in ev:
         if kind is None:
@@ -523,18 +529,24 @@ def change_feed(con, days: int = 7, active_window_days: int = DEFAULT_ACTIVE_WIN
         g["titles"].append(title); g["formats"].add(fk); g["sugar"].add(sc)
         if kind == "price_change":
             g["prices"].append([round(p_reg, 2), round(reg, 2)])
-    for l, fam, title, fk, sc in gone:
-        key = ((l + _dt.timedelta(days=1)).isoformat(), fam, "delisted", "", "")
+    for l, fam, title, fk, sc, first_missing in gone:
+        key = (first_missing.isoformat(), fam, "delisted", "", "")
         g = groups.setdefault(key, {"titles": [], "formats": set(), "prices": [], "sugar": set()})
         g["titles"].append(title); g["formats"].add(fk); g["sugar"].add(sc)
+        g.setdefault("last_seen", set()).add(l.isoformat())
     items = []
     for (d, fam, kind, a, b), g in groups.items():
-        items.append(dict(date=d, brand=fam, kind=kind, offer_from=a if kind.startswith("promo") else None,
-                          offer_to=b if kind.startswith("promo") else None,
+        items.append(dict(date=d, brand=fam, kind=kind, offer_from=a if kind.startswith("promo") or kind == "offer_capture" else None,
+                          offer_to=b if kind.startswith("promo") or kind == "offer_capture" else None,
                           direction=a if kind == "price_change" else None,
                           skus=len(g["titles"]), titles=sorted(g["titles"]), formats=sorted(g["formats"]),
                           sugar=sorted(g["sugar"]),
+                          last_seen=min(g["last_seen"]) if g.get("last_seen") else None,
                           prices=g["prices"]))
+    observed = [r[0] for r in con.execute("SELECT DISTINCT d FROM obs ORDER BY d").fetchall()]
+    gap_dates = {b.isoformat() for a, b in zip(observed, observed[1:]) if (b - a).days > 1}
+    for item in items:
+        item["after_collection_gap"] = item["date"] in gap_dates
     order = {"Coca-Cola": 0, "Pepsi": 1}
     # newest first; within a day Coca-Cola, then Pepsi, then other brands; larger groups first
     items.sort(key=lambda i: (-int(i["date"].replace("-", "")), order.get(i["brand"], 9), -i["skus"]))
@@ -650,3 +662,91 @@ def recent_median_skus(parquet_path: Path = FACT_PARQUET, days: int = 7) -> floa
     """).fetchone()
     con.close()
     return float(row[0]) if row and row[0] is not None else None
+
+
+def recent_brand_medians(parquet_path: Path, config: dict, days: int = 7) -> dict[str, float]:
+    """Use observed collection dates, including zero counts for an absent brand.
+
+    A collection outage must not reset the baseline to zero calendar days.
+    Brands with no history (e.g. own label not returned by search) are not invented.
+    """
+    if not parquet_path.exists():
+        return {}
+    con = connect(parquet_path, config=config)
+    rows = con.execute("""
+        WITH dates AS (SELECT DISTINCT d FROM obs ORDER BY d DESC LIMIT ?),
+        families AS (SELECT DISTINCT brand_family FROM obs WHERE brand_family IS NOT NULL),
+        counts AS (SELECT d, brand_family, COUNT(DISTINCT product_id) AS n
+                   FROM obs GROUP BY ALL)
+        SELECT f.brand_family, MEDIAN(COALESCE(c.n, 0))
+        FROM dates d CROSS JOIN families f
+        LEFT JOIN counts c ON c.d = d.d AND c.brand_family = f.brand_family
+        GROUP BY f.brand_family ORDER BY f.brand_family
+    """, [int(days)]).fetchall()
+    con.close()
+    return {family: float(n) for family, n in rows}
+
+
+def reliability(con, config: dict) -> dict:
+    """Observed coverage and price evidence; missing days never become prices.
+
+    Pattern labels describe observed promotion frequency, not a retailer's intent.
+    A SKU needs every day of the rolling window before receiving a label.
+    """
+    from datetime import timedelta
+    dates = [r[0] for r in con.execute("SELECT DISTINCT d FROM obs ORDER BY d").fetchall()]
+    quality = config.get("quality", {})
+    window = int(quality.get("pattern_window_days", 28))
+    if not dates:
+        return {"observed_days": 0, "missing_dates": [], "brands": [], "patterns": [],
+                "pattern_window_days": window, "stale_after_days": int(quality.get("stale_after_days", 2))}
+    first, last = dates[0], dates[-1]
+    seen = set(dates)
+    missing = [(first + timedelta(days=i)).isoformat()
+               for i in range((last - first).days + 1) if first + timedelta(days=i) not in seen]
+    start = last - timedelta(days=window - 1)
+    brands = _df(con, """
+        SELECT brand_family, strftime(MIN(d), '%Y-%m-%d') AS first_seen,
+               strftime(MAX(d), '%Y-%m-%d') AS last_seen, COUNT(DISTINCT d) AS observed_days,
+               COUNT(DISTINCT d) FILTER (WHERE d >= ?) AS recent_observed_days
+        FROM obs WHERE brand_family IS NOT NULL GROUP BY brand_family ORDER BY brand_family
+    """, [start]).to_dict(orient="records")
+    patterns = _df(con, """
+        SELECT product_id, ANY_VALUE(title) AS title, ANY_VALUE(brand_family) AS brand,
+               COUNT(DISTINCT d) AS observed_days,
+               ROUND(AVG((mechanic <> 'none')::INT), 3) AS promo_share
+        FROM priced WHERE d >= ? AND product_id IN (SELECT product_id FROM active)
+        GROUP BY product_id ORDER BY product_id
+    """, [start]).to_dict(orient="records")
+    for p in patterns:
+        p["status"] = "ready" if p["observed_days"] >= window else "insufficient_history"
+        p["pattern"] = ("low_promotion" if p["promo_share"] <= 0.1 else
+                        "promotion_led" if p["promo_share"] >= 0.5 else "mixed") if p["status"] == "ready" else None
+    prices = con.execute("""
+        SELECT COUNT(*), COUNT(*) FILTER (WHERE regular_is_inferred AND regular_price IS NOT NULL),
+               COUNT(*) FILTER (WHERE regular_price IS NULL)
+        FROM active
+    """).fetchone()
+    # Bound-check inference against the next clean observation. Agreement is an
+    # internal consistency check, not independent validation of the shelf price.
+    audit = con.execute("""
+        WITH x AS (
+            SELECT *, FIRST_VALUE(clean_price IGNORE NULLS) OVER (
+                PARTITION BY retailer, product_id ORDER BY d
+                ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) AS next_clean
+            FROM priced)
+        SELECT COUNT(*) FILTER (WHERE regular_is_inferred AND regular_price IS NOT NULL),
+               COUNT(*) FILTER (WHERE regular_is_inferred AND regular_price IS NOT NULL AND next_clean IS NOT NULL),
+               COUNT(*) FILTER (WHERE regular_is_inferred AND regular_price IS NOT NULL AND next_clean IS NOT NULL
+                                AND abs(regular_price - next_clean) >= 0.01)
+        FROM x WHERE d >= ?
+    """, [start]).fetchone()
+    return {"observed_days": len(dates), "calendar_days": (last - first).days + 1,
+            "missing_dates": missing, "brands": brands, "patterns": patterns,
+            "pattern_window_days": window, "pattern_start": start.isoformat(),
+            "stale_after_days": int(quality.get("stale_after_days", 2)),
+            "capture_notes": ["From 2026-10-27 all promotion badges are retained. Earlier generic-badge observations may hide an offer; missing offers have not been reconstructed."],
+            "price_evidence": {"active_skus": prices[0], "inferred_regular": prices[1],
+                               "unknown_regular": prices[2], "observed_regular": prices[0] - prices[1] - prices[2],
+                               "inferred_sku_days_recent": audit[0], "bound_checkable_sku_days": audit[1],
+                               "bound_disagreements": audit[2], "independent_validation": "pending"}}

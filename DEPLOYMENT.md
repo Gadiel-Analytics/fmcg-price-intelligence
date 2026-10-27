@@ -11,7 +11,7 @@ Dashboard: `https://fmcg.gadielanalytics.com/reports/dashboard.html`
 
 ## Daily run (automatic)
 
-`.github/workflows/daily-scrape.yml` runs at 08:00 UTC (GitHub may start scheduled jobs later
+`.github/workflows/daily-scrape.yml` runs at 08:17 UTC (GitHub may start scheduled jobs later
 than that). Steps: offline tests → live scrape → quality gate → idempotent ingest → cube export →
 commit of `data/`, `reports/` (cube and generated dashboard), `index.html`, `sitemap.xml` and `robots.txt`.
 
@@ -19,7 +19,7 @@ A red run in the Actions tab means one of:
 
 | Failing step | Meaning | Action |
 |---|---|---|
-| Run tests | A code change broke the parser or pricing model | Fix and push; no data was touched |
+| Run tests | A code or dependency incompatibility broke a test | Fix and push; no data was touched |
 | Scrape … `QUALITY GATE FAILED` | SuperValu returned too few SKUs (layout change, outage, block) | Check the log for `FAILED query=` lines; run `--capture-fixture` locally and compare the markup |
 | Commit updated data | Push race with a manual commit | Re-run the workflow |
 
@@ -33,7 +33,7 @@ replaces that day's rows instead of duplicating them.
 ## Local commands
 
 ```bash
-pip install -r requirements-dev.txt
+pip install --require-hashes -r requirements-dev.txt
 python -m pytest -q          # offline tests
 python run.py --dry-run      # parse the bundled fixture; no network, no writes
 python run.py --export-only  # rebuild the cube and all pages from data/fmcg_prices.parquet
@@ -174,3 +174,29 @@ a change; `cube.json` is always fetched fresh.
 Settings → Pages → Deploy from a branch → `main`, folder `/ (root)`. The case study is served at
 the root (`index.html`) and the dashboard at `reports/dashboard.html`; `.nojekyll` serves files
 as they are. Each daily commit updates the cube and the pages.
+
+
+## Recovery and release validation (27 October 2026)
+
+Production uses DuckDB 2.0.0. Run `python -m pytest -q`,
+`node --test tests/test_freshness.cjs`, `python run.py --export-only` and
+`python scripts/check_release.py` before publishing. CI also tests DuckDB 1.5.6
+compatibility. The daily job is triggered by relevant source changes to `main` and
+by schedule/manual dispatch; generated-only commits are excluded.
+
+The job runs `python scripts/verify_production.py --attempts 15 --delay 20` after
+commit-back. It requires HTTPS and matching bytes for the seven public artifacts.
+A green scrape with a red publication verification is not a completed deployment.
+Collection logs are retained for 14 days. Do not retry a historical run expecting
+a backfill: a scrape observes current prices and uses the current UTC date.
+
+Requirements are reviewed locks. To update, edit `requirements*.in` and compile
+both snapshots with `uv pip compile --python-version 3.12 --generate-hashes -o <output> <input>`.
+Review the versions and hashes, run the full CI matrix, and publish deliberately.
+Do not delete the lock or disable the tests to make an incident green.
+
+The freshness banner warns after two UTC calendar days without an observation.
+Per-brand coverage is checked against the last seven observed collection dates,
+including zero counts when a historical brand is missing. F1 independent price
+validation and F4c readiness are separate evidence gates, documented in
+`docs/OPERATIONS_REVIEW_2026-10-27.md`.
