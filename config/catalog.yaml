@@ -154,6 +154,10 @@ events:
     levy_changed: false
 
 quality:
+  required_brands: ["Coca-Cola", "Pepsi"]
+  min_brand_share_of_recent_median: 0.5
+  stale_after_days: 2
+  pattern_window_days: 28
   # Refuse to ingest a run whose SKU count falls below this share of the
   # trailing 7-day median (protects the history from partial or broken scrapes).
   min_share_of_recent_median: 0.5

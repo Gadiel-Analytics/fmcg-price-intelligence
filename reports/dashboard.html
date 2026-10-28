@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Coca-Cola vs Pepsi Price Dashboard, Ireland — Gadiel Analytics</title>
-<meta name="description" content="Live dashboard by Gadiel Guadarrama, Gadiel Analytics: Coca-Cola charges a full-sugar premium on every pack; Pepsi largely does not, and undercuts it on all…"/>
+<meta name="description" content="Live dashboard by Gadiel Guadarrama, Gadiel Analytics: Coca-Cola charges a full-sugar premium on every pack; Pepsi undercuts it on every matched pack."/>
 <meta name="author" content="Gadiel Guadarrama"/>
 <meta name="robots" content="index, follow, max-image-preview:large"/>
 <meta name="theme-color" content="#0D1C2E"/>
@@ -14,7 +14,7 @@
 <meta property="og:type" content="website"/>
 <meta property="og:site_name" content="Gadiel Analytics"/>
 <meta property="og:title" content="Coca-Cola vs Pepsi Price Dashboard, Ireland — Gadiel Analytics"/>
-<meta property="og:description" content="Live dashboard by Gadiel Guadarrama, Gadiel Analytics: Coca-Cola charges a full-sugar premium on every pack; Pepsi largely does not, and undercuts it on all…"/>
+<meta property="og:description" content="Live dashboard by Gadiel Guadarrama, Gadiel Analytics: Coca-Cola charges a full-sugar premium on every pack; Pepsi undercuts it on every matched pack."/>
 <meta property="og:url" content="https://fmcg.gadielanalytics.com/reports/dashboard.html"/>
 <meta property="og:image" content="https://fmcg.gadielanalytics.com/reports/og-image.png"/>
 <meta property="og:image:width" content="1200"/>
@@ -24,7 +24,7 @@
 <meta name="twitter:site" content="@gadielAnalytics"/>
 <meta name="twitter:creator" content="@gadielAnalytics"/>
 <meta name="twitter:title" content="Coca-Cola vs Pepsi Price Dashboard, Ireland — Gadiel Analytics"/>
-<meta name="twitter:description" content="Live dashboard by Gadiel Guadarrama, Gadiel Analytics: Coca-Cola charges a full-sugar premium on every pack; Pepsi largely does not, and undercuts it on all…"/>
+<meta name="twitter:description" content="Live dashboard by Gadiel Guadarrama, Gadiel Analytics: Coca-Cola charges a full-sugar premium on every pack; Pepsi undercuts it on every matched pack."/>
 <meta name="twitter:image" content="https://fmcg.gadielanalytics.com/reports/og-image.png"/>
 <script type="application/ld+json">
 {
@@ -196,7 +196,7 @@
      "contentUrl": "https://github.com/Gadiel-Analytics/fmcg-price-intelligence/raw/main/data/fmcg_prices.parquet"
     }
    ],
-   "dateModified": "2026-10-20"
+   "dateModified": "2026-10-27"
   },
   {
    "@type": "WebPage",
@@ -204,7 +204,7 @@
    "url": "https://fmcg.gadielanalytics.com/reports/dashboard.html",
    "name": "Coca-Cola vs Pepsi Price Dashboard, Ireland — Gadiel Analytics",
    "headline": "Coca-Cola vs Pepsi Price Dashboard, Ireland — Gadiel Analytics",
-   "description": "Live dashboard by Gadiel Guadarrama, Gadiel Analytics: Coca-Cola charges a full-sugar premium on every pack; Pepsi largely does not, and undercuts it on all…",
+   "description": "Live dashboard by Gadiel Guadarrama, Gadiel Analytics: Coca-Cola charges a full-sugar premium on every pack; Pepsi undercuts it on every matched pack.",
    "isPartOf": {
     "@id": "https://fmcg.gadielanalytics.com/#website"
    },
@@ -219,7 +219,7 @@
    },
    "image": "https://fmcg.gadielanalytics.com/reports/og-image.png",
    "inLanguage": "en",
-   "dateModified": "2026-10-20"
+   "dateModified": "2026-10-27"
   }
  ]
 }
@@ -255,6 +255,8 @@ a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible{
 .tab{appearance:none;background:none;border:0;border-bottom:2px solid transparent;padding:16px 0 14px;font:500 15px var(--font);color:var(--mut);cursor:pointer;white-space:nowrap}
 .tab:hover{color:var(--ink)} .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ind)}
 main{max-width:1200px;margin:0 auto;padding:44px 40px 24px}
+.data-status{font-size:14px;line-height:1.5;padding:12px 16px;margin-bottom:24px;background:var(--surf);border-left:3px solid var(--ind)}
+.data-status.overdue{background:#FFFAEB;border-left-color:var(--amber)}
 [role="tabpanel"]:focus{outline:none}
 .kicker{font-size:14px;color:var(--mut);margin-bottom:14px}
 h1{font-size:clamp(28px,3.4vw,40px);line-height:1.16;font-weight:700;letter-spacing:-.02em;max-width:28ch}
@@ -372,15 +374,16 @@ footer a{color:var(--sec)}
 </div>
 
 <main>
+<p id="data-status" class="data-status" role="status" aria-live="polite" data-date="2026-10-27" data-stale-after="2" data-gaps="6">Latest observation: 2026-10-27. 6 collection days missing from the history; no prices have been filled in.</p>
 <!-- SUMMARY -->
 <section role="tabpanel" id="p-summary" aria-labelledby="t-summary" tabindex="0">
-<p class="kicker" id="kicker">SuperValu Ireland, carbonated soft drinks. Daily since 4 June 2026; updated 20 October 2026.</p>
-<h1 id="headline">Coca-Cola charges a full-sugar premium on every pack; Pepsi largely does not, and undercuts it on all but one matched pack</h1>
-<p class="dek" id="dek">Shelf prices read every day, split into regular and promotional prices, normalised per litre and matched pack for pack. Competitor prices cover 24 days so far, so the competitive read is a first snapshot that firms up as history builds.</p>
-<div class="kpis" id="kpis"><div class="k"><div class="kv">+4% to +24%</div><div class="kl">Coca-Cola full-sugar premium over Zero Sugar per litre, across 7 packs</div></div><div class="k"><div class="kv">6 of 8</div><div class="kl">pack sizes where Pepsi and Pepsi Max cost the same today</div></div><div class="k"><div class="kv">9 of 10</div><div class="kl">matched cola packs where Pepsi is cheaper at today&#x27;s price</div></div><div class="k"><div class="kv">139 of 139</div><div class="kl">days the Coca-Cola Zero Sugar 2 L bottle was on promotion</div></div></div>
+<p class="kicker" id="kicker">SuperValu Ireland, carbonated soft drinks. Daily since 4 June 2026; updated 27 October 2026.</p>
+<h1 id="headline">Coca-Cola charges a full-sugar premium on every pack; Pepsi undercuts it on every matched pack</h1>
+<p class="dek" id="dek">Shelf prices read every day, split into regular and promotional prices, normalised per litre and matched pack for pack. Competitor prices cover 25 days so far, so the competitive read is a first snapshot that firms up as history builds.</p>
+<div class="kpis" id="kpis"><div class="k"><div class="kv">+4% to +49%</div><div class="kl">Coca-Cola full-sugar premium over Zero Sugar per litre, across 7 packs</div></div><div class="k"><div class="kv">5 of 7</div><div class="kl">pack sizes where Pepsi and Pepsi Max cost the same today</div></div><div class="k"><div class="kv">8 of 8</div><div class="kl">matched cola packs where Pepsi is cheaper at today&#x27;s price</div></div><div class="k"><div class="kv">140 of 140</div><div class="kl">days the Coca-Cola Zero Sugar 2 L bottle was on promotion</div></div></div>
 <h2 class="h2">Key messages</h2>
-<ul class="messages" id="messages"><li><p>The full-sugar premium exceeds the sugar levy on five of seven packs, and triples it on the 330 ml can.</p><a href="#sugar-tax" data-goto="sugar-tax" data-ex="ex-1">See exhibit 1</a></li><li><p>In the 14 days since Budget 2027, no Coca-Cola pack changed its full-sugar premium; no change to the levy was announced.</p><a href="#sugar-tax" data-goto="sugar-tax" data-ex="ex-ev">See exhibit 2</a></li><li><p>On 17 Oct, Coca-Cola moved its Original 2 L bottle from 3 for €6 to value badge.</p><a href="#summary" data-goto="summary" data-ex="changes">See what changed</a></li><li><p>Pepsi is cheaper than Coca-Cola on nine of ten matched packs; only the promoted Zero Sugar 2 L bottle puts Coca-Cola ahead.</p><a href="#competition" data-goto="competition" data-ex="ex-6">See exhibit 7</a></li><li><p>Coca-Cola, Fanta price full sugar clearly above no sugar.</p><a href="#competition" data-goto="competition" data-ex="ex-7">See exhibit 8</a></li><li><p>Six Coca-Cola SKUs were on promotion on at least 90% of days, all of them 2 L bottles.</p><a href="#promotions" data-goto="promotions" data-ex="ex-4">See exhibit 5</a></li><li><p>One Coca-Cola pack costs more per litre than a smaller pack of the same range.</p><a href="#pack-architecture" data-goto="pack-architecture" data-ex="ex-3">See exhibit 4</a></li><li><p>Red Bull costs about 2.1× Monster per litre at the median price.</p><a href="#competition" data-goto="competition" data-ex="ex-9">See exhibit 10</a></li></ul>
-<noscript><p class="note">The charts need JavaScript. The findings above are generated from the data on every daily run; last updated 20 October 2026.</p></noscript>
+<ul class="messages" id="messages"><li><p>The full-sugar premium exceeds the sugar levy on five of seven packs, and triples it on the 330 ml can.</p><a href="#sugar-tax" data-goto="sugar-tax" data-ex="ex-1">See exhibit 1</a></li><li><p>In the 14 days since Budget 2027, no Coca-Cola pack changed its full-sugar premium; no change to the levy was announced.</p><a href="#sugar-tax" data-goto="sugar-tax" data-ex="ex-ev">See exhibit 2</a></li><li><p>Pepsi is cheaper than Coca-Cola on eight of eight matched packs.</p><a href="#competition" data-goto="competition" data-ex="ex-6">See exhibit 7</a></li><li><p>Coca-Cola, Fanta price full sugar clearly above no sugar.</p><a href="#competition" data-goto="competition" data-ex="ex-7">See exhibit 8</a></li><li><p>Six Coca-Cola SKUs were on promotion on at least 90% of days, all of them 2 L bottles.</p><a href="#promotions" data-goto="promotions" data-ex="ex-4">See exhibit 5</a></li><li><p>Two Coca-Cola packs cost more per litre than a smaller pack of the same range.</p><a href="#pack-architecture" data-goto="pack-architecture" data-ex="ex-3">See exhibit 4</a></li><li><p>Red Bull costs about 2.1× Monster per litre at the median price.</p><a href="#competition" data-goto="competition" data-ex="ex-9">See exhibit 10</a></li></ul>
+<noscript><p class="note">The charts need JavaScript. The findings above are generated from the data on every daily run; last updated 27 October 2026.</p></noscript>
 <h2 class="h2" id="changes">What changed in the last seven days</h2>
 <p class="note" id="changes-note"></p>
 <div class="changes" id="changes-body"></div>
@@ -425,7 +428,7 @@ footer a{color:var(--sec)}
 </figure>
 <figure class="exhibit" id="ex-3">
 <div class="exn">Exhibit 4</div>
-<h3 class="ext" id="ex3-title">One Coca-Cola pack costs more per litre than a smaller pack of the same range</h3>
+<h3 class="ext" id="ex3-title">Two Coca-Cola packs cost more per litre than a smaller pack of the same range</h3>
 <p class="exs">A ladder inversion is a larger pack costing more per litre than a smaller pack of the same range (brand, container, sugar class). Retailers most often break ladders on fast-moving packs.</p>
 <div id="ex3-body"></div>
 <figcaption class="source">Source: SuperValu Ireland public shelf prices, regular prices of SKUs listed today.</figcaption>
@@ -446,7 +449,7 @@ footer a{color:var(--sec)}
 </figure>
 <figure class="exhibit" id="ex-5">
 <div class="exn">Exhibit 6</div>
-<h3 class="ext" id="ex5-title">Shoppers could buy the 2 L Original below its regular price on 135 of 139 days, and the 2 L Zero Sugar on 139 of 139</h3>
+<h3 class="ext" id="ex5-title">Shoppers could buy the 2 L Original below its regular price on 136 of 140 days, and the 2 L Zero Sugar on 140 of 140</h3>
 <p class="exs">Coca-Cola 2 L bottle, price per litre paid by shoppers (solid) against the regular price (dashed). Multibuys are measured per unit when the offer is taken.</p>
 <div class="legend"><span><i class="ln" style="border-color:var(--ink)"></i>Original</span><span><i class="ln" style="border-color:var(--ind)"></i>Zero Sugar</span><span><i class="dash" style="border-color:var(--grey)"></i>Regular price</span></div>
 <div class="chart" id="ex5-chart"></div>
@@ -460,7 +463,7 @@ footer a{color:var(--sec)}
 <header class="sec-head"><h2>Competition</h2><p>Each Coca-Cola system brand against its direct rival, pack for pack, on the price shoppers pay today. Energy is shown separately as an adjacent category.</p></header>
 <figure class="exhibit" id="ex-6">
 <div class="exn">Exhibit 7</div>
-<h3 class="ext" id="ex6-title">Pepsi is cheaper than Coca-Cola on nine of ten matched packs; only the promoted Zero Sugar 2 L bottle puts Coca-Cola ahead</h3>
+<h3 class="ext" id="ex6-title">Pepsi is cheaper than Coca-Cola on eight of eight matched packs</h3>
 <p class="exs">Pepsi price paid today against the Coca-Cola equivalent in the same pack and sugar tier, per unit. Multibuys are per unit when the offer is taken.</p>
 <div class="legend"><span><i class="sq" style="background:var(--grey)"></i>Pepsi cheaper</span><span><i class="sq" style="background:var(--ind)"></i>Coca-Cola cheaper</span><span><span class="tag r">R</span>Pepsi price requires Real Rewards</span></div>
 <div class="chart" id="ex6-chart"></div>
@@ -477,7 +480,7 @@ footer a{color:var(--sec)}
 </figure>
 <figure class="exhibit" id="ex-8">
 <div class="exn">Exhibit 9</div>
-<h3 class="ext" id="ex8-title">7UP is cheaper than Sprite on no of four packs; Club is cheaper than Fanta on no of seven packs</h3>
+<h3 class="ext" id="ex8-title">7UP is cheaper than Sprite on one of four packs; Club is cheaper than Fanta on two of seven packs</h3>
 <p class="exs">Rival price paid today against the Coca-Cola system brand in the same pack and sugar tier: 7UP against Sprite, Club Orange against Fanta Orange.</p>
 <div class="legend"><span><i class="sq" style="background:var(--grey)"></i>Rival cheaper</span><span><i class="sq" style="background:var(--ind)"></i>Coca-Cola system brand cheaper</span><span><span class="tag r">R</span>Rival price requires Real Rewards</span></div>
 <div class="chart" id="ex8-chart"></div>
@@ -499,6 +502,7 @@ footer a{color:var(--sec)}
 <h3>Collection</h3>
 <p>Once a day, an automated job reads SuperValu Ireland's public search results for a fixed set of cola, lemon-lime, orange and energy-drink queries, at human rate (one page every 3–7 seconds) and without logging in. Each product card yields the price shown, any promotion badge, the pack size and the brand label. Nothing personal is collected.</p>
 <p>A run is refused if it returns fewer than half the products of the past week, so a broken or partial page never enters the history. Re-running a day replaces that day's rows. Obvious retailer typos in pack volume (for example "1.75 ml" for 1.75 L) are corrected and flagged.</p>
+<h3>History and price evidence</h3><p>140 observed collection days across 146 calendar days. Missing dates: 2026-10-21, 2026-10-22, 2026-10-23, 2026-10-24, 2026-10-25, 2026-10-26. Gaps are never filled with prices.</p><p>Regular-price evidence for active SKUs: 125 observed on a clean-price day, 13 inferred from another day, 25 unknown. Inference is a model estimate, not an independently verified shelf price. Where explicitly shown by the retailer, refundable deposits are recorded separately; the price comparisons exclude the deposit. Earlier deposit values remain unknown.</p><p>From 2026-10-27 all promotion badges are retained. Earlier generic-badge observations may hide an offer; missing offers have not been reconstructed.</p><p>Promotion-pattern readiness: 0 of 163 active SKUs have all 28 daily observations required in the recent window. EDLP/high-low interpretation is withheld for incomplete windows. Observed promotion frequency alone cannot establish a retailer’s pricing strategy.</p>
 <h3>Pricing model</h3>
 <ul>
 <li><strong>Price per litre</strong> divides the price by the total volume of the pack.</li>
@@ -737,8 +741,19 @@ window.addEventListener("resize",()=>{clearTimeout(rsz);rsz=setTimeout(()=>{if(M
 /* ---------- load ---------- */
 async function load(){
   show(location.hash.slice(1)||"summary",{push:false});
-  try{CUBE=await (await fetch("cube.json",{cache:"no-store"})).json();}
-  catch(e){console.error("cube.json could not be loaded",e);return;}
+  try{const response=await fetch("cube.json",{cache:"no-store"});
+    if(!response.ok) throw new Error(`HTTP ${response.status}`);
+    CUBE=await response.json();
+    if(!CUBE.last_run_date||!CUBE.kpis||!Array.isArray(CUBE.latest)) throw new Error("Invalid data file");}
+  catch(e){console.error("cube.json could not be loaded",e);
+    const status=document.getElementById("data-status");
+    status.dataset.loadError="true";
+    status.classList.add("overdue");status.textContent="Unable to load current data. Findings below are from the last published update.";
+    return;}
+  const status=document.getElementById("data-status");
+  status.dataset.date=CUBE.last_run_date;
+  status.dataset.gaps=String(CUBE.reliability?.missing_dates?.length||0);
+  if(window.updateDataStatus) window.updateDataStatus();
   if((CUBE.schema_version||1)<2){document.getElementById("headline").textContent="This data file predates the current dashboard.";document.getElementById("dek").textContent="It is rebuilt on the next daily run.";return;}
   A=analyse(CUBE);
   document.querySelectorAll(".levy-v").forEach(e=>e.textContent=eur(A.levy));
@@ -788,30 +803,31 @@ function changeText(i){
   const sug=[...new Set((i.sugar||[]).map(k=>SN[k]||k))];
   const what=(packs.length<=2?packs.join(" and "):`${packs.length} pack sizes`)+(sug.length&&sug.length<3?`, ${sug.join(" and ")}`:"");
   switch(i.kind){
+    case "offer_capture": return `${what}: offer evidence is now ${offerLabel(i.offer_to)}; the generic badge prevents a reliable change comparison`;
     case "promo_change": return `${what}: offer changed from ${offerLabel(i.offer_from)} to ${offerLabel(i.offer_to)}`;
     case "promo_start": return `${what}: promotion started, ${offerLabel(i.offer_to)}`;
     case "promo_end": return `${what}: promotion ended (was ${offerLabel(i.offer_from)})`;
     case "price_change": {const p=i.prices[0];return i.skus===1?`${what}: regular price ${i.direction} from ${eur(p[0])} to ${eur(p[1])}`:`${what}: regular price ${i.direction} on ${i.skus} SKUs`;}
     case "listed": return `${what}: new listing`;
     case "relisted": return `${what}: listed again after a gap`;
-    case "delisted": return `${what}: not seen since ${fmtShort(new Date(new Date(i.date+"T00:00:00Z")-864e5).toISOString().slice(0,10))}`;
+    case "delisted": return `${what}: not seen since ${fmtShort(i.last_seen||new Date(new Date(i.date+"T00:00:00Z")-864e5).toISOString().slice(0,10))}`;
   }
   return what;
 }
-const KIND={promo_change:"Offer changed",promo_start:"Promotion started",promo_end:"Promotion ended",price_change:"Regular price",listed:"New listing",relisted:"Listed again",delisted:"Not listed"};
+const KIND={offer_capture:"Offer evidence",promo_change:"Offer changed",promo_start:"Promotion started",promo_end:"Promotion ended",price_change:"Regular price",listed:"New listing",relisted:"Listed again",delisted:"Not listed"};
 function renderChanges(){
   const f=CUBE.change_feed, el=document.getElementById("changes-body"), note=document.getElementById("changes-note");
   if(!f){document.getElementById("changes").hidden=true;note.hidden=true;el.innerHTML="";return;}
   const items=f.items||[];
-  note.textContent=`${fmtDate(f.start)} to ${fmtDate(f.end)}. Offers are compared after normalising their wording, so a relabelled deal is not a change. A SKU counts as not listed after ${(CUBE.analysis_active_window||2)+1} days without being seen.`;
+  note.textContent=`${fmtDate(f.start)} to ${fmtDate(f.end)}. Offers are compared after normalising their wording. A SKU counts as not listed after ${(CUBE.analysis_active_window||2)+1} successful collection dates without being seen. Changes across a collection gap carry a first-observed date, not a confirmed start date.`;
   if(!items.length){el.innerHTML=empty("No offer, price or listing changes in the last seven days.");return;}
   const head=`<thead><tr><th>Date</th><th>Brand</th><th>Change</th><th>Detail</th><th class="num">SKUs</th></tr></thead>`;
-  const row=i=>`<tr><td class="tnum">${fmtShort(i.date)}</td><td>${esc(i.brand)}</td><td class="kind">${esc(KIND[i.kind]||i.kind)}</td><td>${esc(changeText(i))}</td><td class="num">${i.skus}</td></tr>`;
+  const row=i=>`<tr><td class="tnum">${fmtShort(i.date)}${i.after_collection_gap?" (first observed)":""}</td><td>${esc(i.brand)}</td><td class="kind">${esc(KIND[i.kind]||i.kind)}</td><td>${esc(changeText(i))}</td><td class="num">${i.skus}</td></tr>`;
   const block=(title,list,max,foot)=>{if(!list.length)return `<h3 class="sub">${title}</h3>`+empty("None in this period.");
     const top=list.slice(0,max),rest=list.slice(max);
     return `<h3 class="sub">${title}</h3><div class="table-wrap"><table>${head}<tbody>${top.map(row).join("")}</tbody></table></div>`+
       (rest.length?`<details class="data"><summary>Show ${rest.length} more</summary><div class="table-wrap"><table>${head}<tbody>${rest.map(row).join("")}</tbody></table></div></details>`:"")+(foot?`<p class="note">${foot}</p>`:"");};
-  const priceKinds=new Set(["promo_change","promo_start","promo_end","price_change"]);
+  const priceKinds=new Set(["offer_capture","promo_change","promo_start","promo_end","price_change"]);
   el.innerHTML=block("Prices and offers",items.filter(i=>priceKinds.has(i.kind)),8,"")+
     block("Listings",items.filter(i=>!priceKinds.has(i.kind)),5,"Short gaps can reflect what the retailer's search returned on a given day rather than a ranging decision; treat a single listing change as a signal to watch, not a delisting.");
 }
@@ -1118,5 +1134,6 @@ function drawStrip(el,rows){
 }
 load();
 </script>
+<script src="../assets/freshness.js"></script>
 </body>
 </html>

@@ -178,10 +178,17 @@ CHANGELOG.md               # changes, including data and methodology corrections
 docs/PROJECT_CONTROL.md    # scope, decisions, roadmap and gates
 ```
 
+## Operational status and evidence
+
+The October 2026 recovery, price-evidence limitations and deployment checks are recorded in
+[the operations review](docs/OPERATIONS_REVIEW_2026-10-27.md). Missing collection dates are shown
+explicitly in the dashboard. Promotion-pattern interpretation requires every day of a recent
+28-day window; elapsed calendar time alone does not qualify.
+
 ## Running locally
 
 ```bash
-pip install -r requirements-dev.txt
+pip install --require-hashes -r requirements-dev.txt
 python -m pytest -q          # offline tests
 python run.py --dry-run      # parse the bundled fixture; no network, no writes
 python run.py --export-only  # rebuild reports/cube.json from the committed history
@@ -231,7 +238,7 @@ provenance logged. Full statement in [`COMPLIANCE.md`](COMPLIANCE.md). Not legal
 - [x] F3 Consulting-style redesign: six sections, nine exhibits, head-to-head competition
 - [x] F4a Budget watch: dated events, automatic before/after study, levy by date
 - [x] F4b What changed: weekly change feed, confounder-aware Budget read, parser fixes
-- [ ] F4c EDLP vs high-low by SKU (from ~25 Oct, four weeks of competitor history); deposit-inclusive prices
+- [ ] F4c EDLP vs high-low by SKU (after a complete observed 28-day window; see operations review); deposit-inclusive prices
 - [x] F5 Discoverability: pre-rendered findings, case study, structured data, sitemap, citation
 - [ ] F6 In-browser SQL over the Parquet history; weekly brief with claim-strength guardrails
 - [ ] F7 Launch: custom domain, public post

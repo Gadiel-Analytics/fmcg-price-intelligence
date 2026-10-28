@@ -25,6 +25,7 @@ sys.path.insert(0, str(ROOT / "scrapers"))
 
 from scraper import (  # noqa: E402
     load_config, scrape, parse_cards, build_records, print_records, fetch_html,
+    resolve_brand,
 )
 import datastore as ds  # noqa: E402
 import narrative  # noqa: E402
@@ -33,7 +34,7 @@ import sitebuilder as site_builder  # noqa: E402
 REPORTS_DIR = ROOT / "reports"
 FIXTURES_DIR = ROOT / "scrapers" / "fixtures"
 DRY_RUN_FIXTURE = FIXTURES_DIR / "supervalu_search_synthetic.html"
-CUBE_SCHEMA_VERSION = 7
+CUBE_SCHEMA_VERSION = 8
 
 
 def _records(df) -> list[dict]:
@@ -60,6 +61,7 @@ def export_cube_json(config: dict, parquet_path: Path = ds.FACT_PARQUET,
     trend = ds.price_trend(con)
     promos = ds.promo_summary(con)
     counts = ds.daily_counts(con)
+    reliability = ds.reliability(con, config)
     competition = ds.competition_index(con)
     brands = ds.brand_summary(con)
     h2h = ds.head_to_head(con)
@@ -78,6 +80,7 @@ def export_cube_json(config: dict, parquet_path: Path = ds.FACT_PARQUET,
         "last_run_date": counts["date"].iloc[-1] if len(counts) else None,
         "first_run_date": counts["date"].iloc[0] if len(counts) else None,
         "days_of_history": int(len(counts)),
+        "reliability": reliability,
         "levy": {"per_litre_incl_vat": levy, "source": analysis.get("levy_source"),
                  "schedule": analysis.get("levy_schedule") or []},
         "kpis": {
@@ -102,13 +105,14 @@ def export_cube_json(config: dict, parquet_path: Path = ds.FACT_PARQUET,
     }
     payload["narrative"] = narrative.build(payload)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    out_path.write_text(json.dumps(payload, ensure_ascii=False, allow_nan=False, separators=(",", ":")), encoding="utf-8")
     if build_site and config.get("site"):
         site_builder.build(config, payload)
     return {"path": str(out_path), "latest_rows": len(payload["latest"])}
 
 
-def quality_gate(ok_count: int, config: dict, parquet_path: Path = ds.FACT_PARQUET) -> str | None:
+def quality_gate(ok_count: int, config: dict, parquet_path: Path = ds.FACT_PARQUET,
+                 records: list | None = None) -> str | None:
     """Return a failure reason, or None if the run is fit to ingest."""
     if ok_count == 0:
         return "zero successful rows"
@@ -116,6 +120,22 @@ def quality_gate(ok_count: int, config: dict, parquet_path: Path = ds.FACT_PARQU
     median = ds.recent_median_skus(parquet_path)
     if median and ok_count < share * median:
         return f"{ok_count} SKUs is below {share:.0%} of the 7-day median ({median:.0f})"
+    if records is not None:
+        current: dict[str, set] = {}
+        for r in records:
+            if r.status != "OK":
+                continue
+            brand = resolve_brand(r.brand, r.title or "", config)
+            if brand:
+                current.setdefault(brand["family"], set()).add(r.product_id)
+        for family in config.get("quality", {}).get("required_brands", []):
+            if not current.get(family):
+                return f"required brand missing: {family}"
+        brand_share = float(config.get("quality", {}).get("min_brand_share_of_recent_median", 0.5))
+        for family, baseline in ds.recent_brand_medians(parquet_path, config).items():
+            n = len(current.get(family, set()))
+            if baseline and n < brand_share * baseline:
+                return f"{family}: {n} SKUs is below {brand_share:.0%} of recent median ({baseline:.0f})"
     return None
 
 
@@ -127,7 +147,7 @@ def cmd_live(config: dict) -> int:
     for r in failed:
         print(f"  FAILED query={r.search_query!r} status={r.status}")
 
-    reason = quality_gate(ok, config)
+    reason = quality_gate(ok, config, records=records)
     if reason:
         print(f"QUALITY GATE FAILED: {reason}. History and cube left unchanged.")
         return 1

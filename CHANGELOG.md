@@ -1,5 +1,17 @@
 # Changelog
 
+## F5.2 — Collection recovery and operational controls (2026-10-27)
+
+- Fixed DuckDB 2.0 relation API compatibility; exact, hashed dependency snapshots.
+- Updated Node 24 Actions with immutable pins; separate CI for DuckDB 2.0.0 and 1.5.6.
+- Added per-brand collection gates, strict release checks, retained logs and HTTPS publication verification.
+- Fixed multiple promotion badges hiding real offers; added a minimal live card fixture.
+- Captured explicit refundable deposits separately; earlier values remain unknown.
+- Cube schema v8 adds observed coverage, missing dates, regular-price evidence and guarded 28-day promotion-pattern readiness.
+- Added a freshness banner independent of D3. Collection gaps do not imply mass relisting/delisting; ambiguous badge transitions are offer evidence.
+- Restored observation of 27 October; 21–26 October remain missing. No fabricated backfill.
+- F1 independent price validation remains pending; F4c is evidence-gated. See [operations review](docs/OPERATIONS_REVIEW_2026-10-27.md).
+
 ## F5.1 — Custom domain (2026-10-06)
 
 - The site is served at **https://fmcg.gadielanalytics.com** (GitHub Pages, domain verified at

@@ -17,6 +17,7 @@ from __future__ import annotations
 import html
 import json
 import re
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -160,6 +161,42 @@ def _desc(headline: str, lead: str, limit: int = 160) -> str:
     return d[: limit - 1].rsplit(" ", 1)[0] + "…"
 
 
+def _freshness(cube: dict) -> str:
+    last = cube.get("last_run_date") or ""
+    r = cube.get("reliability") or {}
+    threshold = int(r.get("stale_after_days", 2))
+    age = (datetime.now(timezone.utc).date() - date.fromisoformat(last)).days if last else None
+    stale = age is None or age > threshold or age < 0
+    gaps = len(r.get("missing_dates") or [])
+    text = ("Data update overdue. " if stale else "") + f"Latest observation: {last}. "
+    text += (f"{gaps} collection days missing from the history; no prices have been filled in."
+             if gaps else "Prices are observations from the latest successful collection.")
+    return (f'<p id="data-status" class="data-status{" overdue" if stale else ""}" role="status" '
+            f'aria-live="polite" data-date="{_e(last)}" data-stale-after="{threshold}" data-gaps="{gaps}">'
+            f'{_e(text)}</p>')
+
+
+def _reliability(cube: dict) -> str:
+    r = cube.get("reliability")
+    if not r:
+        return ""
+    p = r["price_evidence"]
+    eligible = sum(x["status"] == "ready" for x in r["patterns"])
+    missing = ", ".join(r["missing_dates"]) or "None"
+    return (f'<h3>History and price evidence</h3><p>{r["observed_days"]} observed collection days across '
+            f'{r["calendar_days"]} calendar days. Missing dates: {_e(missing)}. Gaps are never filled with prices.</p>'
+            f'<p>Regular-price evidence for active SKUs: {p["observed_regular"]} observed on a clean-price day, '
+            f'{p["inferred_regular"]} inferred from another day, {p["unknown_regular"]} unknown. '
+            'Inference is a model estimate, not an independently verified shelf price. '
+            'Where explicitly shown by the retailer, refundable deposits are recorded separately; '
+            'the price comparisons exclude the deposit. Earlier deposit values remain unknown.</p>'
+            '<p>' + _e(' '.join(r.get('capture_notes') or [])) + '</p>'
+            f'<p>Promotion-pattern readiness: {eligible} of {len(r["patterns"])} active SKUs have all '
+            f'{r["pattern_window_days"]} daily observations required in the recent window. '
+            'EDLP/high-low interpretation is withheld for incomplete windows. '
+            'Observed promotion frequency alone cannot establish a retailer’s pricing strategy.</p>')
+
+
 def build(config: dict, cube: dict, root: Path = ROOT) -> list[Path]:
     from narrative import fmt_date  # local import keeps site.py importable on its own
     cfg = config["site"]
@@ -179,6 +216,7 @@ def build(config: dict, cube: dict, root: Path = ROOT) -> list[Path]:
                  "description": _desc(headline, "Live dashboard by Gadiel Guadarrama, Gadiel Analytics:"),
                  "image_alt": alt}
     dv = {"head": _head(cfg, base, dash_page, cube, "favicon.svg"),
+          "freshness": _freshness(cube), "reliability_html": _reliability(cube),
           "kicker": _e(summ.get("kicker", "SuperValu Ireland, carbonated soft drinks.")),
           "headline": _e(headline), "dek": _e(summ.get("dek", "")),
           "kpis_html": _kpis_html(summ.get("kpis") or []),
@@ -197,6 +235,7 @@ def build(config: dict, cube: dict, root: Path = ROOT) -> list[Path]:
                "description": _desc(headline, "Daily shelf-price study by Gadiel Guadarrama, Gadiel Analytics:"),
                "image_alt": alt}
     cv = {"head": _head(cfg, base, cs_page, cube, "reports/favicon.svg"), "headline": _e(headline),
+          "freshness": _freshness(cube),
           "kpis_html": _kpis_html(summ.get("kpis") or []),
           "messages_html": _messages_html(summ.get("messages") or [], "reports/dashboard.html"),
           "published": _e(fmt_date(published)), "updated": _e(updated)}

@@ -1,0 +1,6 @@
+# Supported dependency families. Compile reviewed, hashed snapshots; never install this in CI.
+curl_cffi>=0.17,<0.18
+beautifulsoup4>=4.15,<5
+pyyaml>=6.0,<7
+duckdb>=2.0,<3
+pandas>=3.1,<4

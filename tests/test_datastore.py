@@ -30,11 +30,11 @@ def lake(tmp_path):
 
 
 def test_ingest_is_idempotent(lake):
-    before = duckdb.sql(f"SELECT COUNT(*) FROM read_parquet('{lake}')").fetchone()[0]
+    before = duckdb.sql(f"SELECT COUNT(*) FROM read_parquet('{lake}')").fetchall()[0][0]
     # re-running day 9 later in the day replaces, never duplicates
     ds.ingest([rec(9, "F", FULL, "full", 4.10, hour="12")], lake)
     after = duckdb.sql(f"SELECT COUNT(*), MAX(base_price) FILTER (WHERE product_id='F' "
-                       f"AND scraped_at LIKE '2026-07-09%') FROM read_parquet('{lake}')").fetchone()
+                       f"AND scraped_at LIKE '2026-07-09%') FROM read_parquet('{lake}')").fetchall()[0]
     assert before == after[0] == 7
     assert after[1] == 4.10
 

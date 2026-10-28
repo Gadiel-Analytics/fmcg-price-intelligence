@@ -202,14 +202,17 @@ def parse_cards(html: str) -> list[dict]:
         pack = pack_m.group(1).strip() if pack_m else None
         brand_el = card.find(attrs={"data-testid": "ProductCardAQABrand"})
         brand = brand_el.get_text(strip=True) if brand_el else None
-        promo = None
-        promo_el = card.find(attrs={"data-testid": re.compile(r"^promotionBadge-")})
-        if promo_el:
-            promo = promo_el.get("title") or promo_el.get_text(strip=True)
+        # Cards can carry a generic "Great Value" badge followed by the actual
+        # multibuy or Rewards offer. Keep all badges so the first cannot hide it.
+        badges = [el.get("title") or el.get_text(" ", strip=True)
+                  for el in card.find_all(attrs={"data-testid": re.compile(r"^promotionBadge-")})]
+        promo = " | ".join(dict.fromkeys(b for b in badges if b)) or None
+        deposit_m = re.search(r"\+\s*€\s*(\d+(?:\.\d{2})?)\s*Deposit", card.get_text(" ", strip=True), re.I)
         link = card.find("a", href=True)
         url = link["href"] if link else None
         cards.append({"sku": sku, "brand": brand, "name": name, "pack": pack,
-                      "base_price": price, "promo": promo, "url": url})
+                      "base_price": price, "promo": promo, "url": url,
+                      "deposit": float(deposit_m.group(1)) if deposit_m else None})
     return cards
 
 
@@ -247,7 +250,7 @@ def build_records(cards: list[dict], config: dict, query: str, now: str,
             title=name, base_price=c["base_price"],
             unit_price=price_per_litre(name, c["base_price"]),
             unit_price_basis="litre",
-            clubcard_price_text=c["promo"], deposit=None,
+            clubcard_price_text=c["promo"], deposit=c.get("deposit"),
             sugar_g_per_serving=None,
             source_url=c["url"] or page_url, status="OK",
             pack_count=pack_count(name),
@@ -286,6 +289,9 @@ def scrape(config: dict) -> list[PriceRecord]:
 
     with cffi_requests.Session(impersonate=IMPERSONATE_PROFILE, timeout=30) as client:
         for qi, q in enumerate(queries):
+            # Pace failed requests as well as successful ones.
+            if qi:
+                time.sleep(random.uniform(delay_lo, delay_hi))
             url = search_url(config, q)
             now = datetime.now(timezone.utc).isoformat(timespec="seconds")
             ok_so_far = sum(1 for r in records if r.status == "OK")
@@ -302,8 +308,6 @@ def scrape(config: dict) -> list[PriceRecord]:
                 records.append(_blank(config, now, q, url, f"PARSE_ERROR:{type(exc).__name__}"))
                 continue
             records.extend(build_records(cards, config, q, now, url, seen, cap - ok_so_far, dropped))
-            if qi < len(queries) - 1:
-                time.sleep(random.uniform(delay_lo, delay_hi))
 
     if dropped:
         top = sorted(dropped.items(), key=lambda kv: -kv[1])[:15]
